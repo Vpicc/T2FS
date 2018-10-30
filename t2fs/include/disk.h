@@ -6,6 +6,10 @@ DWORD convertToDword(unsigned char* buffer);
 
 WORD convertToWord(unsigned char* buffer);
 
+unsigned char* wordToLtlEnd(WORD entry);
+
+unsigned char* dwordToLtlEnd(DWORD entry);
+
 int init_disk();
 
 

@@ -19,6 +19,26 @@ WORD convertToWord(unsigned char* buffer) {
     return (WORD) ((WORD)buffer[0] | (WORD)buffer[1] << 8);
 }
 
+unsigned char* wordToLtlEnd(WORD entry) {
+    unsigned char* buffer = malloc(sizeof(unsigned char)*2);
+
+    buffer[0] = entry;
+    buffer[1] = entry >> 8;
+
+    return buffer;
+}
+
+unsigned char* dwordToLtlEnd(DWORD entry) {
+        unsigned char* buffer = malloc(sizeof(unsigned char)*4);
+
+    buffer[0] = entry;
+    buffer[1] = entry >> 8;
+    buffer[2] = entry >> 16;
+    buffer[3] = entry >> 24;
+
+    return buffer;
+}
+
 
 
 int init_disk() {
@@ -32,7 +52,7 @@ int init_disk() {
 
         memcpy(superBlock.id, buffer, 4);
         superBlock.version = convertToWord(buffer + 4);
-        superBlock.superblockSize = convertToWord(buffer + 8);
+        superBlock.superblockSize = convertToWord(buffer + 6);
         superBlock.DiskSize = convertToDword(buffer + 8);
         superBlock.NofSectors = convertToDword(buffer + 12);
         superBlock.SectorsPerCluster = convertToDword(buffer + 16);
