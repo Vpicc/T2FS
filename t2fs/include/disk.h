@@ -22,6 +22,8 @@ int writeInFAT(int clusterNo, DWORD value);
 
 DWORD readInFAT(int clusterNo);
 
+struct t2fs_record* readDataCluster(int clusterNo);
+
 
 typedef struct diskf {
     FILE2 file;

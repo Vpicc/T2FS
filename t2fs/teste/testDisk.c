@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "../include/disk.h"
 #include "../include/apidisk.h"
 
@@ -20,6 +22,8 @@ int main() {
     unsigned char* numLtlEnd;
     int num2 = 91532899;
     unsigned char* num2LtlEnd;
+    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+
     init_disk();
 
     printf("\nNUM: %d\n", num);
@@ -57,6 +61,9 @@ int main() {
     writeInFAT(2,0);
 
     printf("\nCLUSTER 2 NA FAT: %x\n",readInFAT(2));
+
+    folderContent = readDataCluster(0);
+
 
 
     return 0;
