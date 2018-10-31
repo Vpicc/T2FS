@@ -62,7 +62,7 @@ int main() {
 
     printf("\nCLUSTER 2 NA FAT: %x\n",readInFAT(2));
 
-    folderContent = readDataCluster(0);
+    folderContent = readDataClusterFolder(0);
 
 
 

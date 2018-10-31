@@ -118,7 +118,12 @@ DWORD readInFAT(int clusterNo) {
 }
 
 
-struct t2fs_record* readDataCluster(int clusterNo) {
+int writeDataClusterFolder(int clusterNo, struct t2fs_record folder) {
+    return 0;
+}
+
+
+struct t2fs_record* readDataClusterFolder(int clusterNo) {
     unsigned int sectorToRead;
     int i = 0;
     int j;
