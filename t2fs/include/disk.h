@@ -26,6 +26,8 @@ struct t2fs_record* readDataClusterFolder(int clusterNo);
 
 int writeDataClusterFolder(int clusterNo,struct t2fs_record folder);
 
+int readCluster(int clusterNo, unsigned char* buffer);
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;

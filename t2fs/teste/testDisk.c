@@ -17,12 +17,38 @@ void printFAT(int sector) {
     printf("\n");
 }
 
+void printDataSector(int clusterNo) {
+    int j;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    readCluster(clusterNo, buffer);
+    printf("\n");
+    for (j = 0; j < 1024; j++){
+        printf("%x ",buffer[j]);
+    }
+    printf("\n");
+
+}
+
+void printFolders(int clusterNo) {
+    int i;
+    int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
+    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+    folderContent = readDataClusterFolder(clusterNo);
+    for(i = 0; i < folderSize; i++) {
+        printf("\nTYPEVAL: %x\n", folderContent[i].TypeVal);
+        printf("NAME: %s\n", folderContent[i].name);
+        printf("BYTESFILESIZE: %x\n", folderContent[i].bytesFileSize);
+        printf("CLUSTERSFILESIZE: %x\n", folderContent[i].clustersFileSize);
+        printf("FIRSTCLUSTER: %x\n", folderContent[i].firstCluster);
+    }
+}
+
 int main() {
     int num = 13333;
     unsigned char* numLtlEnd;
     int num2 = 91532899;
     unsigned char* num2LtlEnd;
-    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
 
     init_disk();
 
@@ -62,7 +88,9 @@ int main() {
 
     printf("\nCLUSTER 2 NA FAT: %x\n",readInFAT(2));
 
-    folderContent = readDataClusterFolder(0);
+    printDataSector(2);
+
+    printFolders(2);
 
 
 
