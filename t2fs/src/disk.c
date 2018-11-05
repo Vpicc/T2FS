@@ -180,17 +180,17 @@ struct t2fs_record* readDataClusterFolder(int clusterNo) {
     }
     return NULL;
 }
-void readDataCluster (int clusterNo){
-    int j;
+
+unsigned char* readDataCluster (int clusterNo){
     unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
     unsigned char* buffer = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster); 
     if (sector >= superBlock.DataSectorStart && sector < superBlock.NofSectors) {
         readCluster(clusterNo, buffer);
-        for(j= 0; j < sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster; j++){
-            printf("%c", buffer[j]);
-        }
+        return buffer;
     }
+    return -1;
 }
+
 int writeCluster(int clusterNo, unsigned char* buffer) {
     int k = 0;
     unsigned int sectorToWrite;
@@ -203,11 +203,9 @@ int writeCluster(int clusterNo, unsigned char* buffer) {
         newBuffer[j] = buffer [j];
     }
     for(sectorToWrite = sector; sectorToWrite < (sector + superBlock.SectorsPerCluster); sectorToWrite++) {
-        write_sector(sector, newBuffer + k);
+        write_sector(sectorToWrite, newBuffer + k);
         k += 256;
     }
-    write_sector(sector, newBuffer);
-
     return 0;
 }
 

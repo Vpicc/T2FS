@@ -28,7 +28,7 @@ int writeDataClusterFolder(int clusterNo,struct t2fs_record folder);
 
 int readCluster(int clusterNo, unsigned char* buffer);
 
-void readDataCluster (int clusterNo);
+unsigned char* readDataCluster (int clusterNo);
 
 int writeCluster(int clusterNo, unsigned char* buffer);
 
