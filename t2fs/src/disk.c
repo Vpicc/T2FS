@@ -138,7 +138,6 @@ int writeDataClusterFolder(int clusterNo, struct t2fs_record folder) {
                 written = 1;
             } 
         }
-
         if (written) {
             return 0;
         } else {
@@ -146,7 +145,6 @@ int writeDataClusterFolder(int clusterNo, struct t2fs_record folder) {
         }
     }
     return -1;
-
 }
 
 int readCluster(int clusterNo, unsigned char* buffer) {
@@ -183,4 +181,31 @@ struct t2fs_record* readDataClusterFolder(int clusterNo) {
     return NULL;
 }
 
+unsigned char* readDataCluster (int clusterNo){
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+    unsigned char* buffer = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster); 
+    if (sector >= superBlock.DataSectorStart && sector < superBlock.NofSectors) {
+        readCluster(clusterNo, buffer);
+        return buffer;
+    }
+    return -1;
+}
+
+int writeCluster(int clusterNo, unsigned char* buffer) {
+    int k = 0;
+    unsigned int sectorToWrite;
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+    unsigned char* newBuffer = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
+    for(int i = 0; i < sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster; i++){
+        newBuffer[i] = '\0';
+    }
+    for(int j = 0; j < strlen((char *)buffer); j++){
+        newBuffer[j] = buffer [j];
+    }
+    for(sectorToWrite = sector; sectorToWrite < (sector + superBlock.SectorsPerCluster); sectorToWrite++) {
+        write_sector(sectorToWrite, newBuffer + k);
+        k += 256;
+    }
+    return 0;
+}
 

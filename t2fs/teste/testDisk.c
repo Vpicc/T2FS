@@ -27,6 +27,17 @@ void printDataSector(int clusterNo) {
         printf("%x ",buffer[j]);
     }
     printf("\n");
+}
+void printDataCluster(int clusterNo) {
+    int j;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    buffer = readDataCluster(clusterNo);
+    printf("\n");
+    for (j = 0; j < 1024; j++){
+        printf("%c",buffer[j]);
+    }
+    printf("\n");
 
 }
 
@@ -43,6 +54,7 @@ void printFolders(int clusterNo) {
         printf("FIRSTCLUSTER: %x\n", folderContent[i].firstCluster);
     }
 }
+
 
 int main() {
     int num = 13333;
@@ -87,12 +99,33 @@ int main() {
     writeInFAT(2,0);
 
     printf("\nCLUSTER 2 NA FAT: %x\n",readInFAT(2));
-
+    printf("\n\n*******Print do Data Sector 2*******:\n");
     printDataSector(2);
-
+    printf("\n\n*******FOLDERS*******:\n");
     printFolders(2);
 
+    printf("\n\n*******CLUSTER 3*******:\n");
+    printDataSector(3);
+    printf("\n\n*******Conteudo do CLUSTER 3*******:\n");
+    printDataCluster(3);
 
+    printf("\n\n************************************:\n");
+    printf("Escrevendo no Cluster 23: 'Esse eh o teste no cluster 23..'");
+    char* escrita = "Esse eh o teste no cluster 23..";
+    writeCluster(23, (unsigned char*) escrita);
+    printDataSector(23);
+    printDataCluster(23);
+
+    printf("\n\nEscrevendo no Cluster 23 a letra 'b' 1024 vezes, tamanho de um cluster");  
+    char aEveryWhere[1024];
+    for(int i =0; i < 1024; i++){
+        aEveryWhere[i] = 'b';
+    }
+    writeCluster(23, (unsigned char*) aEveryWhere);
+    printDataSector(23);
+    printDataCluster(23);
+
+printf("\n\n\n");  
 
     return 0;
 }
