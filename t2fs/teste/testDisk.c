@@ -43,6 +43,19 @@ void printFolders(int clusterNo) {
         printf("FIRSTCLUSTER: %x\n", folderContent[i].firstCluster);
     }
 }
+/*void printClusterData(int clusterNo) {
+    int i;
+    int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
+    //int folderSizeInBytes = sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
+    //struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+    //folderContent = readDataClusterFolder(clusterNo);
+    char* clusterContent = malloc(folderSize);
+    clusterContent = readClusterFolder(clusterNo);
+    for(i = 0; i < folderSize; i++) {
+        printf("%c", clusterContent[i]);
+    }
+}*/
+
 
 int main() {
     int num = 13333;
@@ -87,12 +100,33 @@ int main() {
     writeInFAT(2,0);
 
     printf("\nCLUSTER 2 NA FAT: %x\n",readInFAT(2));
-
+    printf("\n\n*******Print do Data Sector 2*******:\n");
     printDataSector(2);
-
+    printf("\n\n*******FOLDERS*******:\n");
     printFolders(2);
 
+    printf("\n\n*******CLUSTER 3*******:\n");
+    printDataSector(3);
+    printf("\n\n*******Conteudo do CLUSTER 3*******:\n");
+    readDataCluster(3);
 
+    printf("\n\n************************************:\n");
+    printf("Escrevendo no Cluster 23: Esse eh o teste no cluster 23..");
+    /*char* escrita = "Esse eh o arquivo FILE1.TXT.Ele esta no diretorio raiz.ALO";
+    writeCluster(23, (unsigned char*) escrita);
+    printDataSector(23);
+    readDataCluster(23);*/
+    printf("Escrevendo no Cluster 23 a letra 'a' 1024 vezes, tamanho de um cluster");  
+
+    char aEveryWhere[1024];
+    for(int i =0; i < 1024; i++){
+        aEveryWhere[i] = 'a';
+    }
+    writeCluster(23, (unsigned char*) aEveryWhere);
+    printDataSector(23);
+    readDataCluster(23);
+
+printf("\n\n\n");  
 
     return 0;
 }
