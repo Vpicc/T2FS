@@ -57,6 +57,9 @@ void printFolders(int clusterNo) {
 
 
 int main() {
+    int i;
+    char aEveryWhere[1024];
+    char* escrita = "Esse eh o teste no cluster 23..";
     int num = 13333;
     unsigned char* numLtlEnd;
     int num2 = 91532899;
@@ -111,17 +114,16 @@ int main() {
 
     printf("\n\n************************************:\n");
     printf("Escrevendo no Cluster 23: 'Esse eh o teste no cluster 23..'");
-    char* escrita = "Esse eh o teste no cluster 23..";
-    writeCluster(23, (unsigned char*) escrita);
+    writeCluster(23, (unsigned char*) escrita,0,32);
     printDataSector(23);
     printDataCluster(23);
 
     printf("\n\nEscrevendo no Cluster 23 a letra 'b' 1024 vezes, tamanho de um cluster");  
-    char aEveryWhere[1024];
-    for(int i =0; i < 1024; i++){
+
+    for(i = 0; i < 1024; i++){
         aEveryWhere[i] = 'b';
     }
-    writeCluster(23, (unsigned char*) aEveryWhere);
+    writeCluster(23, (unsigned char*) aEveryWhere,0,1024);
     printDataSector(23);
     printDataCluster(23);
 

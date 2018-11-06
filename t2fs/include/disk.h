@@ -30,7 +30,7 @@ int readCluster(int clusterNo, unsigned char* buffer);
 
 unsigned char* readDataCluster (int clusterNo);
 
-int writeCluster(int clusterNo, unsigned char* buffer);
+int writeCluster(int clusterNo, unsigned char* buffer, int position, int size);
 
 typedef struct diskf {
     FILE2 file;
