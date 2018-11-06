@@ -64,6 +64,12 @@ int main() {
     unsigned char* numLtlEnd;
     int num2 = 91532899;
     unsigned char* num2LtlEnd;
+    struct t2fs_record writeFolder;
+    writeFolder.TypeVal = 0x01;
+    strcpy(writeFolder.name, "ARQUIVOTESTE.TXT");
+    writeFolder.firstCluster = 30;
+    writeFolder.bytesFileSize = 0;
+    writeFolder.clustersFileSize = 1;
 
     init_disk();
 
@@ -127,7 +133,20 @@ int main() {
     printDataSector(23);
     printDataCluster(23);
 
-printf("\n\n\n");  
+    printf("\n\n\n");
+
+
+    printf("\n\n************************************:\n");
+    printf("\n\nTeste de escrita de arquivo/pasta em pasta:\n");
+    printf("\n\n*******FOLDER ANTES DA ESCRITA*******:\n");
+    printFolders(2);
+    printf("\nResultado do write: %d\n",writeDataClusterFolder(2,writeFolder));
+    printf("\n\n*******FOLDER APOS ESCRITA*******:\n");
+    printFolders(2);
+
+    printf("\n\n\n");
+
+
 
     return 0;
 }
