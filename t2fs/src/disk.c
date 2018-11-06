@@ -76,7 +76,7 @@ int init_disk() {
 
 int writeInFAT(int clusterNo, DWORD value) {
     int offset = clusterNo/64;
-    int sector = superBlock.pFATSectorStart + offset;
+    unsigned int sector = superBlock.pFATSectorStart + offset;
     int sectorOffset = (clusterNo % 64)*4;
     unsigned char buffer[SECTOR_SIZE] = {0};
     unsigned char* writeValue = malloc(sizeof(unsigned char)*4);
@@ -86,7 +86,7 @@ int writeInFAT(int clusterNo, DWORD value) {
         return -1;
     }
 
-    if (sector > 0 && sector < superBlock.DataSectorStart) { // se nao acabou a FAT
+    if (sector >= superBlock.pFATSectorStart && sector < superBlock.DataSectorStart) { // se nao acabou a FAT
         badSectorCheck = readInFAT(clusterNo);
         if (badSectorCheck == BAD_SECTOR) { // checa se setor nao esta danificado
             return -1;
@@ -104,12 +104,12 @@ int writeInFAT(int clusterNo, DWORD value) {
 
 DWORD readInFAT(int clusterNo) {
     int offset = clusterNo/64;
-    int sector = superBlock.pFATSectorStart + offset;
+    unsigned int sector = superBlock.pFATSectorStart + offset;
     int sectorOffset = (clusterNo % 64)*4;
     unsigned char buffer[SECTOR_SIZE];
     DWORD value;
 
-    if (sector > 0 && sector < superBlock.DataSectorStart) { // se nao acabou a FAT
+    if (sector >= superBlock.pFATSectorStart && sector < superBlock.DataSectorStart) { // se nao acabou a FAT
         read_sector(sector,buffer);
         value = convertToDword(buffer + sectorOffset);
         return value;
@@ -118,4 +118,106 @@ DWORD readInFAT(int clusterNo) {
 }
 
 
+int writeDataClusterFolder(int clusterNo, struct t2fs_record folder) {
+    int i;
+    int written = 0;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+    
+    if (sector >= superBlock.DataSectorStart && sector < superBlock.NofSectors) {
+        readCluster(clusterNo, buffer);
+
+        for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
+            if ( ((BYTE) buffer[i]) == 0 ) {
+                memcpy(buffer,&(folder.TypeVal),1);
+                memcpy((buffer+1),folder.name,51);
+                memcpy((buffer+52),dwordToLtlEnd(folder.bytesFileSize),4);
+                memcpy((buffer+56),dwordToLtlEnd(folder.clustersFileSize),4);
+                memcpy((buffer+60),dwordToLtlEnd(folder.firstCluster),4);
+                written = 1;
+            } 
+        }
+
+
+        if (written) {
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+    return -1;
+}
+
+int readCluster(int clusterNo, unsigned char* buffer) {
+    int i = 0;
+    unsigned int sectorToRead;
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+
+    for(sectorToRead = sector; sectorToRead < (sector + superBlock.SectorsPerCluster); sectorToRead++) {
+        read_sector(sectorToRead,buffer + i);
+        i += 256;
+    }
+    return 0;
+}
+
+struct t2fs_record* readDataClusterFolder(int clusterNo) {
+    int j;
+    int folderSizeInBytes = sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+    unsigned char* buffer = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
+    struct t2fs_record* folderContent = malloc(folderSizeInBytes);
+
+    if (sector >= superBlock.DataSectorStart && sector < superBlock.NofSectors) {
+        readCluster(clusterNo, buffer);
+
+        for(j = 0; j < folderSizeInBytes/sizeof(struct t2fs_record); j++) {
+            folderContent[j].TypeVal = (BYTE) *(buffer + sizeof(struct t2fs_record)*j);
+            memcpy(folderContent[j].name, buffer + 1 + sizeof(struct t2fs_record)*j, 51);
+            folderContent[j].bytesFileSize = convertToDword(buffer + 52 + sizeof(struct t2fs_record)*j);
+            folderContent[j].clustersFileSize = convertToDword(buffer + 56 + sizeof(struct t2fs_record)*j);
+            folderContent[j].firstCluster = convertToDword(buffer + 60 + sizeof(struct t2fs_record)*j);
+        }
+        return folderContent;
+    }
+    return NULL;
+}
+
+unsigned char* readDataCluster (int clusterNo){
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+    unsigned char* buffer = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster); 
+    if (sector >= superBlock.DataSectorStart && sector < superBlock.NofSectors) {
+        readCluster(clusterNo, buffer);
+        return buffer;
+    }
+    return NULL;
+}
+
+int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
+    int i;
+    int j;
+    int k = 0;
+    unsigned int sectorToWrite;
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+    unsigned char* newBuffer = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
+
+    if (size > SECTOR_SIZE*superBlock.SectorsPerCluster || (position + size) > SECTOR_SIZE*superBlock.SectorsPerCluster) {
+        return -1;
+    }
+
+    readCluster(clusterNo, newBuffer);
+
+    for(j = position; j < size + position; j++){
+        newBuffer[j] = buffer[j - position];
+    }
+
+    for(i = position + size; i < SECTOR_SIZE*superBlock.SectorsPerCluster; i++){
+        newBuffer[i] = '\0';
+    }
+    for(sectorToWrite = sector; sectorToWrite < (sector + superBlock.SectorsPerCluster); sectorToWrite++) {
+        write_sector(sectorToWrite, newBuffer + k);
+        k += 256;
+    }
+    return position + size;
+}
 

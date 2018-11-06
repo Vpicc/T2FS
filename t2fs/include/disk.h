@@ -22,6 +22,15 @@ int writeInFAT(int clusterNo, DWORD value);
 
 DWORD readInFAT(int clusterNo);
 
+struct t2fs_record* readDataClusterFolder(int clusterNo);
+
+int writeDataClusterFolder(int clusterNo,struct t2fs_record folder);
+
+int readCluster(int clusterNo, unsigned char* buffer);
+
+unsigned char* readDataCluster (int clusterNo);
+
+int writeCluster(int clusterNo, unsigned char* buffer, int position, int size);
 
 typedef struct diskf {
     FILE2 file;
