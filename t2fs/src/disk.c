@@ -64,10 +64,12 @@ int init_disk() {
             openFiles[i].currPointer = -1;
             strcpy(openFiles[i].name,"");
         }
+
+        currentPath.absolute = malloc(sizeof(char)*5); // Valor inicial arbitrario
+        strcpy(currentPath.absolute, "/");
+        currentPath.clusterNo = superBlock.RootDirCluster;
         
         disk_initialized = 1;
-
-        printf("\n%d\n", superBlock.pFATSectorStart);
         
     }
     return 0;
@@ -225,5 +227,56 @@ int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
         k += 256;
     }
     return position + size;
+}
+
+int pathToCluster(char* path) {
+    int i;
+    int found = 0;
+    int pathsNo = 0;
+    int folderInPath = 1;
+    int pathComplete = 0;
+    unsigned int currentCluster;
+    char* pathTok;
+    char* pathcpy = malloc(sizeof(char)*(strlen(path)+1));
+    int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
+    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+
+    strcpy(pathcpy,path);
+
+    if (pathcpy[0] == '/') {
+        currentCluster = superBlock.RootDirCluster;
+    }else {
+        currentCluster = currentPath.clusterNo;
+    }
+
+    pathTok = strtok(pathcpy,"/");
+
+    while(pathTok != NULL && pathsNo == found && folderInPath) {
+        pathsNo += 1;
+        folderContent = readDataClusterFolder(currentCluster);
+        for(i = 0; i < folderSize; i++) {
+            if (strcmp(folderContent[i].name,pathTok) == 0) {
+                currentCluster = folderContent[i].firstCluster;
+                found += 1;
+                if (folderContent[i].TypeVal != TYPEVAL_DIRETORIO) {
+                    folderInPath = 0;
+                }
+            }
+        }
+        pathTok = strtok(NULL,"/");
+        if (pathTok == NULL) {
+            pathComplete = 1;
+        }
+    }
+
+    if (pathsNo != found) {
+        return -1;
+    }
+
+    if (!pathComplete) {
+        return -1;
+    }
+
+    return currentCluster;
 }
 

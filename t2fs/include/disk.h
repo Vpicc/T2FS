@@ -32,11 +32,20 @@ unsigned char* readDataCluster (int clusterNo);
 
 int writeCluster(int clusterNo, unsigned char* buffer, int position, int size);
 
+int pathToCluster(char* path);
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;
-    char name[54];
+    char name[51];
 } DISK_FILE;
+
+typedef struct currp {
+    char* absolute;
+    int clusterNo;
+} CURRENT_PATH;
+
+CURRENT_PATH currentPath;
 
 
 #endif
