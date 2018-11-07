@@ -303,13 +303,18 @@ int tokenizePath(char* path, char*** tokenized) {
 
     strcpy(pathcpy, path);
 
-    for(i = 0; i < strlen(path); i++) {
-        if (path[i] == '/') {
+    pathTok = strtok(pathcpy,"/");
+
+    while(pathTok != NULL) {
+        pathTok = strtok(NULL,"/");
+        if (pathTok != NULL) {
             countFolders += 1;
         }
     }
 
     *tokenized = malloc(sizeof(char*)*countFolders);
+
+    strcpy(pathcpy, path);
 
     pathTok = strtok(pathcpy,"/");
 
@@ -340,11 +345,6 @@ int toAbsolutePath(char * path, char * currPath, char ** output) {
         *output = malloc(sizeof(char)*(strlen(path)+ 1));
         strcpy(*output,path);
         return 0;
-    }
-
-    
-    if(pathcpy[(strlen(path)-1)] == '/') {
-        pathcpy[(strlen(path)-1)] = '\0';
     }
 
     strcpy(buffer,currPath);
