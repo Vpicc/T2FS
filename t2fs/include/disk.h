@@ -36,7 +36,9 @@ int pathToCluster(char* path);
 
 int findFATOpenCluster(int* clusterReturn);
 
-int tokenizeFolders(char* path, char*** tokenized);
+int tokenizePath(char* path, char*** tokenized);
+
+int toAbsolutePath(char * path, char * currPath, char ** output);
 
 typedef struct diskf {
     FILE2 file;

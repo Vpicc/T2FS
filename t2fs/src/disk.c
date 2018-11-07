@@ -295,7 +295,7 @@ int findFATOpenCluster(int* clusterReturn) { // deixei assim, caso usarmos clust
     return functionReturn;
 }
 
-int tokenizeFolders(char* path, char*** tokenized) {
+int tokenizePath(char* path, char*** tokenized) {
     int i;
     int countFolders = 1;
     char * pathcpy = malloc(sizeof(char)*(strlen(path)+1));
@@ -322,6 +322,57 @@ int tokenizeFolders(char* path, char*** tokenized) {
     }
 
     return countFolders;
+
+}
+
+int toAbsolutePath(char * path, char * currPath, char ** output) {
+    int i;
+    int numTokens;
+    char ** tokenizedPath;
+    char * cutToken;
+    int bufferSize = (strlen(path) + 1 + strlen(currPath) + 1);
+    char * buffer = malloc(sizeof(char)*bufferSize);
+    char * pathcpy = malloc(sizeof(char)*(strlen(path) + 1));
+
+    strcpy(pathcpy,path);
+
+    if(pathcpy[0] == '/'){
+        *output = malloc(sizeof(char)*(strlen(path)+ 1));
+        strcpy(*output,path);
+        return 0;
+    }
+
+    
+    if(pathcpy[(strlen(path)-1)] == '/') {
+        pathcpy[(strlen(path)-1)] = '\0';
+    }
+
+    strcpy(buffer,currPath);
+
+    numTokens = tokenizePath(pathcpy, &tokenizedPath);
+
+    for(i = 0; i < numTokens; i++) {
+        if (strcmp(tokenizedPath[i],"..") == 0) {
+            if(strcmp(buffer,"/") != 0){
+                cutToken = strrchr(buffer, '/');
+                *cutToken = '\0';
+            }
+            if(strcmp(buffer,"") == 0) {
+                strcpy(buffer,"/");
+            }
+        } else if (strcmp(tokenizedPath[i],".") != 0) {
+            strcat(buffer,"/");
+            strcat(buffer,tokenizedPath[i]);
+        }
+    }
+
+    *output = malloc(sizeof(char)*(strlen(buffer)+ 1));
+
+    strcpy(*output, buffer);
+
+    free(buffer);
+
+    return 0;
 
 }
 

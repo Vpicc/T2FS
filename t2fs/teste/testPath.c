@@ -61,8 +61,8 @@ int main() {
     int cluster;
     char** testeToken;
     int testeTokenSize;
+    char * testeAbsolute;
     init_disk();
-
 
     printFolders(2);
 
@@ -102,12 +102,16 @@ int main() {
 
     printf("\nVoltando a zero no cluster 11\n");
 
-    testeTokenSize = tokenizeFolders("./dir1/dir2/../dir3", &testeToken);
+    testeTokenSize = tokenizePath("./dir1/dir2/../dir3", &testeToken);
 
     for(i = 0; i < testeTokenSize; i++) {
         printf("\n%s\n", testeToken[i]);
     }
 
+
+    toAbsolutePath("./b/c/d/e/f/g/h/i/../../j/./k","/aaa/bbb",&testeAbsolute);
+
+    printf("\nTESTE ABSOLUTE: %s\n", testeAbsolute);
 
 
     return 0;
