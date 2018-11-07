@@ -57,8 +57,12 @@ void printFolders(int clusterNo) {
 
 
 int main() {
+    int i;
     int cluster;
+    char** testeToken;
+    int testeTokenSize;
     init_disk();
+
 
     printFolders(2);
 
@@ -97,6 +101,13 @@ int main() {
     writeInFAT(11,0);
 
     printf("\nVoltando a zero no cluster 11\n");
+
+    testeTokenSize = tokenizeFolders("./dir1/dir2/../dir3", &testeToken);
+
+    for(i = 0; i < testeTokenSize; i++) {
+        printf("\n%s\n", testeToken[i]);
+    }
+
 
 
     return 0;

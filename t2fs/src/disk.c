@@ -295,3 +295,33 @@ int findFATOpenCluster(int* clusterReturn) { // deixei assim, caso usarmos clust
     return functionReturn;
 }
 
+int tokenizeFolders(char* path, char*** tokenized) {
+    int i;
+    int countFolders = 1;
+    char * pathcpy = malloc(sizeof(char)*(strlen(path)+1));
+    char * pathTok;
+
+    strcpy(pathcpy, path);
+
+    for(i = 0; i < strlen(path); i++) {
+        if (path[i] == '/') {
+            countFolders += 1;
+        }
+    }
+
+    *tokenized = malloc(sizeof(char*)*countFolders);
+
+    pathTok = strtok(pathcpy,"/");
+
+    i = 0;
+    while(pathTok != NULL) {
+        (*tokenized)[i] = malloc(sizeof(char)*strlen(pathTok));
+        strcpy((*tokenized)[i], pathTok);
+        pathTok = strtok(NULL,"/");
+        i += 1;
+    }
+
+    return countFolders;
+
+}
+

@@ -36,6 +36,8 @@ int pathToCluster(char* path);
 
 int findFATOpenCluster(int* clusterReturn);
 
+int tokenizeFolders(char* path, char*** tokenized);
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;
