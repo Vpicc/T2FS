@@ -61,6 +61,7 @@ int main() {
     char aEveryWhere[1024];
     char* escrita = "Esse eh o teste no cluster 23..";
     int num = 13333;
+    DWORD value;
     unsigned char* numLtlEnd;
     int num2 = 91532899;
     unsigned char* num2LtlEnd;
@@ -88,26 +89,29 @@ int main() {
     printf("\nWORD LITTLE END: %x %x %x %x\n",num2LtlEnd[0], num2LtlEnd[1], num2LtlEnd[2], num2LtlEnd[3]);
 
     printFAT(0);
-
-    printf("\nCLUSTER 2 NA FAT: %x\n",readInFAT(2));
+    readInFAT(2, &value);
+    printf("\nCLUSTER 2 NA FAT: %x\n",value);
 
     printf("\nESCREVENDO EOF\n");
     writeInFAT(2,END_OF_FILE);
 
-    printf("\nCLUSTER 2 NA FAT: %x\n",readInFAT(2));
+    readInFAT(2, &value);
+    printf("\nCLUSTER 2 NA FAT: %x\n",value);
 
     printf("\nESCREVENDO 0xFF00FF00\n");
     writeInFAT(2,0xFF00FF00);
 
-    printf("\nCLUSTER 2 NA FAT: %x\n",readInFAT(2));
+    readInFAT(2, &value);
+    printf("\nCLUSTER 2 NA FAT: %x\n",value);
 
     printFAT(0);
 
-    printf("\nVOLTANDO PARA ZERO\n");
+    //printf("\nVOLTANDO PARA ZERO\n");
 
-    writeInFAT(2,0);
+    //writeInFAT(2,0);
 
-    printf("\nCLUSTER 2 NA FAT: %x\n",readInFAT(2));
+    readInFAT(2, &value);
+    printf("\nCLUSTER 2 NA FAT: %x\n",value);
     printf("\n\n*******Print do Data Sector 2*******:\n");
     printDataSector(2);
     printf("\n\n*******FOLDERS*******:\n");

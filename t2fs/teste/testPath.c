@@ -57,6 +57,7 @@ void printFolders(int clusterNo) {
 
 
 int main() {
+    int cluster;
     init_disk();
 
     printFolders(2);
@@ -76,9 +77,26 @@ int main() {
 
     printf("\nRetorno do pathToCluster './dir1/file3.txt': %d\n", pathToCluster("./dir1/file3.txt"));
 
+    printFAT(0);
+    if(findFATOpenCluster(&cluster) != 0) {
+        printf("\nERRO!\n");
+    }
 
+    printf("\nCluster disponivel na FAT: %d\n", cluster);
 
+    writeInFAT(11,END_OF_FILE);
 
+    printf("\nEscrevendo EOF no cluster 11\n");
+
+    if(findFATOpenCluster(&cluster) != 0) {
+        printf("\nERRO!\n");
+    }
+
+    printf("\nCluster disponivel na FAT: %d\n", cluster);
+
+    writeInFAT(11,0);
+
+    printf("\nVoltando a zero no cluster 11\n");
 
 
     return 0;

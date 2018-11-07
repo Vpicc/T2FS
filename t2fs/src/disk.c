@@ -89,7 +89,7 @@ int writeInFAT(int clusterNo, DWORD value) {
     }
 
     if (sector >= superBlock.pFATSectorStart && sector < superBlock.DataSectorStart) { // se nao acabou a FAT
-        badSectorCheck = readInFAT(clusterNo);
+        readInFAT(clusterNo, &badSectorCheck);
         if (badSectorCheck == BAD_SECTOR) { // checa se setor nao esta danificado
             return -1;
         }
@@ -104,17 +104,16 @@ int writeInFAT(int clusterNo, DWORD value) {
     return -1;
 }
 
-DWORD readInFAT(int clusterNo) {
+int readInFAT(int clusterNo, DWORD* value) {
     int offset = clusterNo/64;
     unsigned int sector = superBlock.pFATSectorStart + offset;
     int sectorOffset = (clusterNo % 64)*4;
     unsigned char buffer[SECTOR_SIZE];
-    DWORD value;
 
     if (sector >= superBlock.pFATSectorStart && sector < superBlock.DataSectorStart) { // se nao acabou a FAT
         read_sector(sector,buffer);
-        value = convertToDword(buffer + sectorOffset);
-        return value;
+        *value = convertToDword(buffer + sectorOffset);
+        return 0;
     }
     return -1;
 }
@@ -278,5 +277,21 @@ int pathToCluster(char* path) {
     }
 
     return currentCluster;
+}
+
+int findFATOpenCluster(int* clusterReturn) { // deixei assim, caso usarmos cluster como unsigned int no futuro
+    int functionReturn = 0;
+    int clusterNo = 1;
+    DWORD value = BAD_SECTOR;
+    while(functionReturn == 0 && value != 0) {
+        clusterNo += 1;
+        functionReturn = readInFAT(clusterNo,&value);
+    }
+    if(functionReturn == -1) {
+        *clusterReturn = -1;
+    } else {
+        *clusterReturn = clusterNo;
+    }
+    return functionReturn;
 }
 
