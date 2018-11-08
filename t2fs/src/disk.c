@@ -373,7 +373,7 @@ int toAbsolutePath(char * path, char * currPath, char ** output) {
             }
         } else{ 
             if (strcmp(tokenizedPath[i],".") != 0) {
-                if(strcmp(buffer,"/" != 0)){
+                if(strcmp(buffer,"/") != 0){
                     strcat(buffer,"/");
                 }
                 strcat(buffer,tokenizedPath[i]);
