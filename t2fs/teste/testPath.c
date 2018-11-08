@@ -110,11 +110,11 @@ int main() {
     }
 
 
-    toAbsolutePath("./b/c/d/e/f/g/h/i/../../j/./k///","/aaa/bbb",&testeAbsolute);
+    toAbsolutePath("../b/c/d/e/f/g/h/i/../j/./k///","/aaa/bbb",&testeAbsolute);
 
     printf("\nTESTE ABSOLUTE: %s\n", testeAbsolute);
 
-    printf("\n***************TESTE separatePath***************n");
+    printf("\n***************TESTE separatePath***************");
 
     char * saidaUm;
     char * saidaDois;
@@ -123,6 +123,18 @@ int main() {
     printf("\nSaida Um: %s\nTamanho da saida um: %d", saidaUm, strlen(saidaUm));
     printf("\n\nSaida Dois: %s\nTamanho da saida dois: %d", saidaDois, strlen(saidaDois));
     printf("\n");
+
+    printf("\n***************TESTE ChangeDir***************");
+    printf("\nDiretorio atual: %s\n", currentPath.absolute);
+    changeDir("./dir1/file1.txt");
+    printf("\nAlterando para:'./dir1/file1.txt'\n");
+    printf("Diretorio alterado: %s\nCluster atual: %d\n", currentPath.absolute, currentPath.clusterNo);
+    changeDir(".././aa/b/../cb");
+    printf("\nAlterando para:'.././aa/b/../cb'\n");
+    printf("Diretorio alterado2: %s\n", currentPath.absolute);
+
+    printf("\n");
+
 
     return 0;
 }
