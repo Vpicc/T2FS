@@ -375,4 +375,23 @@ int toAbsolutePath(char * path, char * currPath, char ** output) {
     return 0;
 
 }
+/*
+* INPUT:/aaa/ccc/aa/bb OUT: /aaa/ccc/aa AND bb
+*/
+int separatePath(char * path, char ** FristStringOutput, char ** SecondStringOutput) {
+    char *aux;
+    const char dir_div = '/';
+    int lenghtAux;
+    int lenghtPath = strlen(path);
+    //Nunca vão ter um tamanho maior que o path
+    *SecondStringOutput = malloc(lenghtPath);
+    memset(*SecondStringOutput,'\0',lenghtPath);
+    *FristStringOutput = malloc(lenghtPath);
+    memset(*FristStringOutput,'\0',lenghtPath);
 
+    aux = strrchr(path, dir_div);
+    lenghtAux = strlen(aux);
+    memcpy(*SecondStringOutput,aux+1,lenghtAux);
+    memcpy(*FristStringOutput, path, lenghtPath-lenghtAux);
+    return 0;
+}

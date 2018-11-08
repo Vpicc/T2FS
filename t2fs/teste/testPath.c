@@ -5,6 +5,7 @@
 #include "../include/apidisk.h"
 
 //gcc -o testePath testPath.c ../src/disk.c ../lib/apidisk.o -Wall -ggdb && ./testePath
+//gcc -m32 -o testePath testPath.c ../src/disk.c ../lib/apidisk.o -Wall -ggdb && ./testePath
 
 void printFAT(int sector) {
     int j;
@@ -113,6 +114,15 @@ int main() {
 
     printf("\nTESTE ABSOLUTE: %s\n", testeAbsolute);
 
+    printf("\n***************TESTE separatePath***************n");
+
+    char * saidaUm;
+    char * saidaDois;
+    separatePath("/ddd/ccc/aaaaa", &saidaUm, &saidaDois);
+
+    printf("\nSaida Um: %s\nTamanho da saida um: %d", saidaUm, strlen(saidaUm));
+    printf("\n\nSaida Dois: %s\nTamanho da saida dois: %d", saidaDois, strlen(saidaDois));
+    printf("\n");
 
     return 0;
 }
