@@ -98,6 +98,9 @@ int writeInFAT(int clusterNo, DWORD value) {
         writeValue = dwordToLtlEnd(value);
         memcpy(buffer + sectorOffset, writeValue,4);
         write_sector(sector,buffer);
+
+        free(writeValue);
+
         
         return 0;
     }
@@ -146,13 +149,14 @@ int writeDataClusterFolder(int clusterNo, struct t2fs_record folder) {
             write_sector(sectorToWrite, buffer + k);
             k += 256;
         }
-
+        free(buffer);
         if (written) {
             return 0;
         } else {
             return -1;
         }
     }
+    free(buffer);
     return -1;
 }
 
@@ -185,8 +189,10 @@ struct t2fs_record* readDataClusterFolder(int clusterNo) {
             folderContent[j].clustersFileSize = convertToDword(buffer + 56 + sizeof(struct t2fs_record)*j);
             folderContent[j].firstCluster = convertToDword(buffer + 60 + sizeof(struct t2fs_record)*j);
         }
+        free(buffer);
         return folderContent;
     }
+    free(buffer);
     return NULL;
 }
 
@@ -225,6 +231,7 @@ int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
         write_sector(sectorToWrite, newBuffer + k);
         k += 256;
     }
+    free(newBuffer);
     return position + size;
 }
 
@@ -269,13 +276,18 @@ int pathToCluster(char* path) {
     }
 
     if (pathsNo != found) {
+        free(pathcpy);
+        free(folderContent);
         return -1;
     }
 
     if (!pathComplete) {
+        free(pathcpy);
+        free(folderContent);
         return -1;
     }
-
+    free(pathcpy);
+    free(folderContent);
     return currentCluster;
 }
 
@@ -325,7 +337,7 @@ int tokenizePath(char* path, char*** tokenized) {
         pathTok = strtok(NULL,"/");
         i += 1;
     }
-
+    free(pathcpy);
     return countFolders;
 
 }
@@ -341,13 +353,12 @@ int toAbsolutePath(char * path, char * currPath, char ** output) {
 
     strcpy(pathcpy,path);
 
-    if(pathcpy[0] == '/'){
-        *output = malloc(sizeof(char)*(strlen(path)+ 1));
-        strcpy(*output,path);
-        return 0;
-    }
 
-    strcpy(buffer,currPath);
+    if(pathcpy[0] == '/'){
+        buffer[0] = '\0';
+    } else {
+        strcpy(buffer,currPath);
+    }
 
     numTokens = tokenizePath(pathcpy, &tokenizedPath);
 
@@ -371,6 +382,7 @@ int toAbsolutePath(char * path, char * currPath, char ** output) {
     strcpy(*output, buffer);
 
     free(buffer);
+    free(pathcpy);
 
     return 0;
 
