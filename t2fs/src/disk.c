@@ -409,22 +409,104 @@ int separatePath(char * path, char ** FristStringOutput, char ** SecondStringOut
     lenghtAux = strlen(aux);
     memcpy(*SecondStringOutput,aux+1,lenghtAux);
     memcpy(*FristStringOutput, path, lenghtPath-lenghtAux);
+    strcat(*FristStringOutput,"/");
     return 0;
 }
 int changeDir(char * path){
     char * absolute;
     int clusterNewPath;
-    if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
-        return -1;
 
-    clusterNewPath = pathToCluster(absolute);
-    if(clusterNewPath == -1)
+    if(strlen(path) == 1){
         return -1;
-    
+    }
+
+    if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1){
+        //printf("AbsoluteA: %s", absolute);
+        free(absolute);
+        return -1;
+    }
+//se o absoluto do atual com o path for /, então é pq é o ROOT.
+    if(strlen(absolute)== 1 && absolute[0] == '/'){
+        clusterNewPath = superBlock.RootDirCluster;
+    }
+    else
+        clusterNewPath = pathToCluster(absolute);
+
+    if(clusterNewPath == -1){
+        //printf("Absolute: %s\n", absolute);
+        free(absolute);
+        return -1;
+    }
+
     strcpy(currentPath.absolute, absolute);
     currentPath.clusterNo = clusterNewPath;
 
     free(absolute);
     
     return 0;    
+}
+int mkdir(char * path){
+    char * absolute;
+    char * firstOut;
+    char * secondOut;
+    int firstClusterFreeInFAT;
+    int clusterDotDot;
+
+    toAbsolutePath(path, currentPath.absolute, &absolute);
+    //printf("\nAboslute: %s", absolute);
+    separatePath(absolute, &firstOut, &secondOut);
+    //printf("\nfirstOut: %s", firstOut);
+    //printf("\necondOut: %s", secondOut);
+
+    if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1;
+    }
+//se o firstOut do absolute for '/', então DotDot vai ser o currentPath
+    if(strlen(firstOut) == 1 && firstOut[0]== '/'){
+        clusterDotDot = superBlock.RootDirCluster;
+    }
+    else//se nao for, então tem q achar onde fica
+        clusterDotDot = pathToCluster(firstOut);
+
+//caminho dir anterior
+// printf("\nDot Dot: %d\n", clusterDotDot);
+  
+    struct t2fs_record one_dot;
+    struct t2fs_record two_dot;
+    struct t2fs_record folder;
+
+
+    one_dot.TypeVal = TYPEVAL_DIRETORIO;
+    strcpy(one_dot.name, ".");
+    one_dot.bytesFileSize = SECTOR_SIZE*superBlock.SectorsPerCluster;
+    one_dot.clustersFileSize = 1;
+    one_dot.firstCluster = firstClusterFreeInFAT;
+    writeDataClusterFolder(firstClusterFreeInFAT, one_dot);
+
+
+    two_dot.TypeVal = TYPEVAL_DIRETORIO;
+    strcpy(two_dot.name, "..");
+    two_dot.bytesFileSize = SECTOR_SIZE*superBlock.SectorsPerCluster;
+    two_dot.clustersFileSize = 1;
+    two_dot.firstCluster = clusterDotDot;
+    writeDataClusterFolder(firstClusterFreeInFAT, two_dot);
+
+
+    folder.TypeVal = TYPEVAL_DIRETORIO;
+    strcpy(folder.name, secondOut);
+    folder.bytesFileSize = SECTOR_SIZE*superBlock.SectorsPerCluster;;
+    folder.clustersFileSize = 1;
+    folder.firstCluster = firstClusterFreeInFAT;
+    writeDataClusterFolder(clusterDotDot, folder);
+
+    writeInFAT(firstClusterFreeInFAT, END_OF_FILE);
+
+    free(absolute);
+    free(firstOut);
+    free(secondOut);
+
+    return 0;
 }
