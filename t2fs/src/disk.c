@@ -371,9 +371,13 @@ int toAbsolutePath(char * path, char * currPath, char ** output) {
             if(strcmp(buffer,"") == 0) {
                 strcpy(buffer,"/");
             }
-        } else if (strcmp(tokenizedPath[i],".") != 0) {
-            strcat(buffer,"/");
-            strcat(buffer,tokenizedPath[i]);
+        } else{ 
+            if (strcmp(tokenizedPath[i],".") != 0) {
+                if(strcmp(buffer,"/") != 0){
+                    strcat(buffer,"/");
+                }
+                strcat(buffer,tokenizedPath[i]);
+            }
         }
     }
 
@@ -387,4 +391,40 @@ int toAbsolutePath(char * path, char * currPath, char ** output) {
     return 0;
 
 }
+/*
+* INPUT:/aaa/ccc/aa/bb OUT: /aaa/ccc/aa AND bb
+*/
+int separatePath(char * path, char ** FristStringOutput, char ** SecondStringOutput) {
+    char *aux;
+    const char dir_div = '/';
+    int lenghtAux;
+    int lenghtPath = strlen(path);
+    //Nunca vão ter um tamanho maior que o path
+    *SecondStringOutput = malloc(lenghtPath);
+    memset(*SecondStringOutput,'\0',lenghtPath);
+    *FristStringOutput = malloc(lenghtPath);
+    memset(*FristStringOutput,'\0',lenghtPath);
 
+    aux = strrchr(path, dir_div);
+    lenghtAux = strlen(aux);
+    memcpy(*SecondStringOutput,aux+1,lenghtAux);
+    memcpy(*FristStringOutput, path, lenghtPath-lenghtAux);
+    return 0;
+}
+int changeDir(char * path){
+    char * absolute;
+    int clusterNewPath;
+    if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
+        return -1;
+
+    clusterNewPath = pathToCluster(absolute);
+    if(clusterNewPath == -1)
+        return -1;
+    
+    strcpy(currentPath.absolute, absolute);
+    currentPath.clusterNo = clusterNewPath;
+
+    free(absolute);
+    
+    return 0;    
+}
