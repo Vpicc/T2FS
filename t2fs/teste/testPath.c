@@ -125,15 +125,49 @@ int main() {
     printf("\n");
 
     printf("\n***************TESTE ChangeDir***************");
+
     printf("\nDiretorio atual: %s\n", currentPath.absolute);
+
     changeDir("./dir1/file1.txt");
     printf("\nAlterando para:'./dir1/file1.txt'\n");
     printf("Diretorio alterado: %s\nCluster atual: %d\n", currentPath.absolute, currentPath.clusterNo);
+    
+    printf("\nAlterando para:'.././aa/b/../cb'\n");    
     changeDir(".././aa/b/../cb");
-    printf("\nAlterando para:'.././aa/b/../cb'\n");
-    printf("Diretorio alterado2: %s\n", currentPath.absolute);
+    printf("Diretorio alterado, porem inexistente: %s\n", currentPath.absolute);
 
-    printf("\n");
+    printf("\nVoltando para o raiz:\n");
+    changeDir("../../");
+    printf("Diretorio alterado de volta para a raiz: %s\nCluster atual: %d\n", currentPath.absolute, currentPath.clusterNo);
+
+    printf("\n\n***************TESTE MakeDir***************\n");
+
+    printf("Fazendo o direito MakeDir na Root. 'abra'\n");
+    mkdir("../abra");
+    printf("***Folders da ROOT:\n");
+    printFolders(2);
+    printf("***Mudando para o diretorio recem criado '/abra'\n");
+    changeDir("/abra");
+    printf("Folders do direitorio '/abra':\n");
+    printFolders(currentPath.clusterNo);
+
+    printf("\nCriando um Diretorio na '/dir1':\n");
+    mkdir("../dir1/abra2");
+    changeDir("../dir1");
+    printf("Folders do diretorio '/dir1':");
+    printFolders(currentPath.clusterNo);
+    printf("\nFolders do direitorio Abra2:");
+    changeDir("./abra2");
+    printFolders(currentPath.clusterNo);
+
+    printf("\nCriando um Diretorio na Raiz. 'abra3':\n");
+    mkdir("../../abra3");
+    printf("Folders da raiz:");
+    changeDir("../../");
+    printFolders(currentPath.clusterNo);
+    printf("\nFolders do direitorio Abra3:");
+    changeDir("./abra3");
+    printFolders(currentPath.clusterNo);
 
 
     return 0;

@@ -41,7 +41,12 @@ int tokenizePath(char* path, char*** tokenized);
 int toAbsolutePath(char * path, char * currPath, char ** output);
 
 int separatePath(char * path, char ** FristStringOutput, char ** SecondStringOutput) ;
+
 int changeDir(char * path);
+
+int mkdir(char * path);
+
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;
