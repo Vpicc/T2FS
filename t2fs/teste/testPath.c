@@ -142,33 +142,46 @@ int main() {
 
     printf("\n\n***************TESTE MakeDir***************\n");
 
-    printf("Fazendo o direito MakeDir na Root. 'abra'\n");
+    printf("\n*****Fazendo o direito 'abra' na Root.\n");
     mkdir("../abra");
     printf("***Folders da ROOT:\n");
     printFolders(2);
-    printf("***Mudando para o diretorio recem criado '/abra'\n");
+    printf("\n***Mudando para o diretorio recem criado '/abra'\n");
     changeDir("/abra");
     printf("Folders do direitorio '/abra':\n");
     printFolders(currentPath.clusterNo);
+    changeDir("../");
+    printf("\n***Deletando o diretorio recem criado '/abra'\n");
+    printFAT(0);
+    deleteDir("./abra");
+    printf("***Folders da ROOT:\n");
+    printFolders(currentPath.clusterNo);
+    printf("***Folde do diretorio que foi deletado '/abra':\n");
+    printFolders(11);
+    printFAT(0);
 
-    printf("\nCriando um Diretorio na '/dir1':\n");
+    printf("\n\n*****Fazendo o direito 'abra2' na Dir1.\n");
     mkdir("../dir1/abra2");
     changeDir("../dir1");
-    printf("Folders do diretorio '/dir1':");
+    printf("\n**Folders do diretorio '/dir1':");
     printFolders(currentPath.clusterNo);
-    printf("\nFolders do direitorio Abra2:");
+    printf("\n\n**Folders do direitorio Abra2 criado no /dir1:");
     changeDir("./abra2");
     printFolders(currentPath.clusterNo);
 
-    printf("\nCriando um Diretorio na Raiz. 'abra3':\n");
+    printf("\n\n\n**Criando um Diretorio 'abra3' na Raiz:\n");
     mkdir("../../abra3");
-    printf("Folders da raiz:");
+    printf("\n**Folders da raiz:");
     changeDir("../../");
     printFolders(currentPath.clusterNo);
-    printf("\nFolders do direitorio Abra3:");
+    printf("\n**Folders do direitorio Abra3:");
     changeDir("./abra3");
     printFolders(currentPath.clusterNo);
+    changeDir("../");
 
-
+    printf("\n\n***Deletando o diretorio recem criado '/abra3 da Raiz'\n");
+    deleteDir("./abra3");
+    printf("\n***Folders da Raiz:\n");
+    printFolders(currentPath.clusterNo);
     return 0;
 }

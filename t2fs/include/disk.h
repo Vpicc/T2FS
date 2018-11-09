@@ -46,6 +46,11 @@ int changeDir(char * path);
 
 int mkdir(char * path);
 
+int isEmptyDir(int clusterNo);
+
+int deleteDir(char * path);
+
+int writeZeroClusterFolderByName(int clusterNo, struct t2fs_record folder, char * fileName, BYTE TypeValEntrada);
 
 typedef struct diskf {
     FILE2 file;

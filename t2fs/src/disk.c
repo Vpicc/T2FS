@@ -510,3 +510,123 @@ int mkdir(char * path){
 
     return 0;
 }
+int isEmptyDir(int clusterNo){
+    int i;
+    int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
+    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+    folderContent = readDataClusterFolder(clusterNo);
+    unsigned int tam=  0;
+    for(i = 0; i < folderSize; i++) {
+        if(!((strcmp(folderContent[i].name, ".") == 0) || (strcmp(folderContent[i].name, "..")== 0))){
+            tam++;
+        }
+    }
+    if(tam > 0){//is empty
+        return 1;
+    }
+    else
+        return 0;
+}
+int deleteDir(char * path){
+    char * absolute;
+    char * firstOut;
+    char * secondOut;
+    unsigned int clusterDirFather;
+    unsigned int clusterDir;
+    int sucess;
+
+    if(toAbsolutePath(path, currentPath.absolute, &absolute)== -1){
+       // printf("\nRetorno no abolute\n");
+        return -1;
+    }
+    if(separatePath(absolute, &firstOut, &secondOut)==-1){//secondOut tem o nome da pasta que tem q apagar
+        //printf("\nRetorno no separate\n");
+        return -1;
+    }
+
+    if(changeDir(path)== -1){//vai pro direito que quer apagar.
+        //printf("\nRetorno no change\n");        
+    }
+    else{
+       // printf("\nEntrou Aqui\n");
+        clusterDir = currentPath.clusterNo;
+    }
+
+    if(isEmptyDir(currentPath.clusterNo) && currentPath.clusterNo != superBlock.RootDirCluster){
+        if(changeDir("../")== -1){//volta pro diretorio pai do diretorio que quer apagar
+            return -1;
+        }
+        clusterDirFather = currentPath.clusterNo;
+        //printf("\n**ENTREI EMPTY**\n");
+        int i;
+        int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
+        struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+        folderContent = readDataClusterFolder(currentPath.clusterNo);
+        for(i = 0; i < folderSize; i++) {
+            if(strcmp(folderContent[i].name, secondOut) == 0){
+                    //printf("\n**ENTREI IF**\n");
+                    folderContent[i].TypeVal = TYPEVAL_INVALIDO;
+                    strcpy(folderContent[i].name, "\0");
+                    folderContent[i].bytesFileSize = 0;
+                    folderContent[i].clustersFileSize = 0;
+                    folderContent[i].firstCluster = 0;
+                    writeInFAT(clusterDir, 0);
+                    //writeDataClusterFolder(firstClusterFreeInFAT, folderContent[i]);
+                    //int writeCluster(clusterDirErased, unsigned char* buffer, int position, int size)
+                    writeZeroClusterFolderByName(clusterDirFather, folderContent[i], secondOut, TYPEVAL_DIRETORIO);
+                    writeZeroClusterFolderByName(clusterDir,folderContent[i],".",TYPEVAL_DIRETORIO);
+                    writeZeroClusterFolderByName(clusterDir,folderContent[i],"..",TYPEVAL_DIRETORIO);                    
+                    sucess = 1;
+            }
+        }
+        if(sucess){
+            return 0;
+        }
+        else
+            return -1;
+    }
+    return 0;
+}
+
+int writeZeroClusterFolderByName(int clusterNo, struct t2fs_record folder, char * fileName, BYTE TypeValEntrada) {
+    //printf("\n**ENTREI write**\n");
+    int i;
+    int k = 0;
+    int written = 0;
+    unsigned int sectorToWrite;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+    
+    if (sector >= superBlock.DataSectorStart && sector < superBlock.NofSectors) {
+        readCluster(clusterNo, buffer);
+
+       // printf("\nfileName: %s", fileName);
+        for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
+           // printf("\nNumero de vezes do for %d\n", i);
+            if ( (strcmp((char *)buffer+i+1, fileName) == 0) && (((BYTE) buffer[i]) == TypeValEntrada) && !written ) {
+                //printf("\nEntrou aqui no STRCMP\nCluster = %d", clusterNo);
+                memcpy(buffer + i,&(folder.TypeVal),1);
+                memcpy((buffer + i + 1),folder.name,51);
+                memcpy((buffer + i + 52),dwordToLtlEnd(folder.bytesFileSize),4);
+                memcpy((buffer + i + 56),dwordToLtlEnd(folder.clustersFileSize),4);
+                memcpy((buffer + i + 60),dwordToLtlEnd(folder.firstCluster),4);
+                written = 1;
+            } 
+        }
+
+        for(sectorToWrite = sector; sectorToWrite < (sector + superBlock.SectorsPerCluster); sectorToWrite++) {
+            write_sector(sectorToWrite, buffer + k);
+            k += 256;
+        }
+        free(buffer);
+        if (written) {
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+    free(buffer);
+    return -1;
+}
+
