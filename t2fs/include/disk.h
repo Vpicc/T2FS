@@ -20,7 +20,7 @@ int init_disk();
 
 int writeInFAT(int clusterNo, DWORD value);
 
-DWORD readInFAT(int clusterNo);
+int readInFAT(int clusterNo, DWORD* value);
 
 struct t2fs_record* readDataClusterFolder(int clusterNo);
 
@@ -32,11 +32,43 @@ unsigned char* readDataCluster (int clusterNo);
 
 int writeCluster(int clusterNo, unsigned char* buffer, int position, int size);
 
+int pathToCluster(char* path);
+
+int findFATOpenCluster(int* clusterReturn);
+
+int tokenizePath(char* path, char*** tokenized);
+
+int toAbsolutePath(char * path, char * currPath, char ** output);
+
+int separatePath(char * path, char ** FristStringOutput, char ** SecondStringOutput) ;
+
+int changeDir(char * path);
+
+int mkdir(char * path);
+
+DIRENT2 searchDirByHandle(DIR2 handle);
+
+DIR2 openDir(char *path);
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;
-    char name[54];
+    char name[51];
 } DISK_FILE;
+
+typedef struct diskd {
+    DIR2 handle;
+    int noReads;
+    struct currp path;
+    DIRENT2 directory;
+} DISK_DIR;
+
+typedef struct currp {
+    char* absolute;
+    int clusterNo;
+} CURRENT_PATH;
+
+CURRENT_PATH currentPath;
 
 
 #endif
