@@ -7,7 +7,9 @@
 
 int disk_initialized = 0;
 
+//aa
 DISK_FILE openFiles[10];
+DISK_DIR openDirectories[10];
 
 DWORD convertToDword(unsigned char* buffer) {
     return (DWORD) ((DWORD)buffer[0] | (DWORD)buffer[1] << 8 |(DWORD)buffer[2] << 16 |(DWORD)buffer[3] << 24 );
@@ -63,6 +65,10 @@ int init_disk() {
             openFiles[i].file = -1;
             openFiles[i].currPointer = -1;
             strcpy(openFiles[i].name,"");
+            openDirectories[i].handle = -1;
+            openDirectories[i].noReads=0;
+            openDirectories[i].path.absolute=malloc(sizeof(100));
+            openDirectories[i].directory=setNullDirent();
         }
 
         currentPath.absolute = malloc(sizeof(char)*5); // Valor inicial arbitrario
@@ -416,8 +422,13 @@ int changeDir(char * path){
     char * absolute;
     int clusterNewPath;
 
-    if(strlen(path) == 1){
+    if(strlen(path) == 0){ //Modifiquei 1 por 0 pois imagino que aqui vc esteja verificando se não é uma string vazia - SAMUEL
         return -1;
+    }
+    if(strcmp(path,"/")==0){ //Nao estava conseguindo retornar o root - SAMUEL
+        currentPath.clusterNo=superBlock.RootDirCluster;
+        strcpy(currentPath.absolute,"/");
+        return 0;
     }
 
     if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1){
@@ -629,4 +640,101 @@ int writeZeroClusterFolderByName(int clusterNo, struct t2fs_record folder, char 
     free(buffer);
     return -1;
 }
+DIRENT2 setNullDirent()
+{
+    DIRENT2 dir;
+    strcpy(dir.name,"");
+    dir.fileType=0xFF;
+    dir.fileSize=0x0000;
 
+    return dir;
+}
+
+DIRENT2 searchDirByHandle(DIR2 handle){
+
+    int i;
+    int found=-1;
+    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+    int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
+
+    for(i=0;i<10 && found==-1;i++){
+        if(openDirectories[i].handle==handle){
+            found=0;
+ 
+            if(changeDir(openDirectories[i].path.absolute) == -1){
+                return setNullDirent();
+            }
+            folderContent=readDataClusterFolder(currentPath.clusterNo);
+            if(openDirectories[i].noReads<folderSize){
+            openDirectories[i].directory.fileSize=folderContent[openDirectories[i].noReads].bytesFileSize;
+            openDirectories[i].directory.fileType=folderContent[openDirectories[i].noReads].TypeVal;
+            strcpy(openDirectories[i].directory.name,folderContent[openDirectories[i].noReads].name);
+            openDirectories[i].noReads++;
+            return openDirectories[i].directory;
+        }
+        }
+    }
+    return setNullDirent();
+}
+void setCurrentPathToRoot(){
+    strcpy(currentPath.absolute,"/");
+    currentPath.clusterNo=superBlock.RootDirCluster;
+}
+
+DIR2 openDir(char *path){
+    int i=0;
+    int foundOpenDirectory=-1;
+    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+
+    setCurrentPathToRoot();
+
+    if(changeDir(path)==-1)
+        return -1;
+    
+    folderContent= readDataClusterFolder(currentPath.clusterNo);
+    if(folderContent[0].TypeVal != TYPEVAL_DIRETORIO){
+        return -2;
+    }
+    while(foundOpenDirectory == -1 && i<10){
+        if(openDirectories[i].handle == -1){
+            openDirectories[i].handle = i;
+            openDirectories[i].directory.fileSize=folderContent[i].bytesFileSize;
+            openDirectories[i].directory.fileType=folderContent[i].TypeVal;
+            strcpy(openDirectories[i].path.absolute,currentPath.absolute);
+            openDirectories[i].path.clusterNo=currentPath.clusterNo;
+            strcpy(openDirectories[i].directory.name,folderContent[i].name);
+            foundOpenDirectory=0;
+            return openDirectories[i].handle;
+        }
+        i++;
+    }
+    return -3;
+}
+
+void printOpenDirectories(){
+    int i;
+    printf("\nLista de diretorios abertos:\n\n");
+    for(i=0;i<10;i++)
+        if(openDirectories[i].handle!=-1)
+            fprintf(stderr,"%d: %s\tcluster:%d\n",i,openDirectories[i].path.absolute,openDirectories[i].path.clusterNo);
+}
+void freeOpenDirectory(DISK_DIR *opendirectory){
+    opendirectory->handle=-1;
+    opendirectory->noReads=0;
+    strcpy(opendirectory->path.absolute,"/");
+    opendirectory->path.clusterNo=superBlock.RootDirCluster;
+    opendirectory->directory=setNullDirent();
+}
+int closeDir(DIR2 handle){
+    int i;
+    int found=-1;
+    for(i=0;i<10 && found==-1;i++){
+        if(openDirectories[i].handle==handle){
+            freeOpenDirectory(&openDirectories[i]);
+            found=0;
+            return 0;
+        }
+    }
+    return -1;
+
+}
