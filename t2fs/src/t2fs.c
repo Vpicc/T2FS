@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../include/t2fs.h"
+#include "../include/disk.h"
 
 
 /*-----------------------------------------------------------------------------
@@ -255,7 +256,8 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o ide
 	Em caso de erro, ser� retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 DIR2 opendir2 (char *pathname) {
-    return -1;
+
+	return openDir(pathname);
 }
 
 
@@ -276,7 +278,15 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero ( e "dentry" n�o ser� v�lido)
 -----------------------------------------------------------------------------*/
 int readdir2 (DIR2 handle, DIRENT2 *dentry) {
-    return -1;
+
+	DIRENT2 diretoryentry;
+	fprintf(stderr,"Erro no t2fs");
+	diretoryentry=searchDirByHandle(handle);
+	*dentry=diretoryentry;
+	if(strcmp(diretoryentry.name,"")==0)
+		return -1;
+	
+	return 0;
 }
 
 

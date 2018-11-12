@@ -52,6 +52,16 @@ int deleteDir(char * path);
 
 int writeZeroClusterFolderByName(int clusterNo, struct t2fs_record folder, char * fileName, BYTE TypeValEntrada);
 
+DIRENT2 searchDirByHandle(DIR2 handle);
+
+DIR2 openDir(char *path);
+
+DIRENT2 setNullDirent();
+
+void printOpenDirectories();
+
+void setCurrentPathToRoot();
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;
@@ -65,5 +75,11 @@ typedef struct currp {
 
 CURRENT_PATH currentPath;
 
+typedef struct diskd {
+    DIR2 handle;
+    int noReads;
+    struct currp path;
+    DIRENT2 directory;
+} DISK_DIR;
 
 #endif

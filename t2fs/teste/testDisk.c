@@ -3,6 +3,7 @@
 #include <string.h>
 #include "../include/disk.h"
 #include "../include/apidisk.h"
+#include "../include/t2fs.h"
 
 //gcc -o testeDisk testDisk.c ../src/disk.c ../lib/apidisk.o -Wall -ggdb && ./testeDisk
 
@@ -38,7 +39,6 @@ void printDataCluster(int clusterNo) {
         printf("%c",buffer[j]);
     }
     printf("\n");
-
 }
 
 void printFolders(int clusterNo) {
@@ -61,6 +61,7 @@ int main() {
     char aEveryWhere[1024];
     char* escrita = "Esse eh o teste no cluster 23..";
     int num = 13333;
+    DIR2 openFile0,openFile1,openFile2,openFile3;
     DWORD value;
     unsigned char* numLtlEnd;
     int num2 = 91532899;
@@ -71,7 +72,7 @@ int main() {
     writeFolder.firstCluster = 30;
     writeFolder.bytesFileSize = 0;
     writeFolder.clustersFileSize = 1;
-
+    DIRENT2 directoryentry;
     init_disk();
 
     printf("\nNUM: %d\n", num);
@@ -149,6 +150,70 @@ int main() {
     printFolders(2);
 
     printf("\n\n\n");
+
+    fprintf(stderr,"ABRINDO DIRETORIOs\n\n");
+
+
+    openFile1=opendir2("/dir1");
+    fprintf(stderr,"Retorno da funcao opendir procurando por dir1 = %d\n\n",openFile1);
+
+    openFile2=opendir2("./dir1");
+     fprintf(stderr,"Retorno da funcao opendir procurando por dir1 = %d\n\n",openFile2);
+
+    openFile3=opendir2("/");
+        fprintf(stderr,"Retorno da funcao opendir procurando por root(/) = %d\n\n",openFile3);
+    
+    
+
+    printOpenDirectories();
+    fprintf(stderr,"Testando readdir2\n\n");
+
+
+    if(readdir2(2,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"First entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"First entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"First entry size: %x\n",directoryentry.fileSize);
+    }
+        if(readdir2(2,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"Second entry size: %x\n",directoryentry.fileSize);
+    }
+     if(readdir2(2,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"Second entry size: %x\n",directoryentry.fileSize);
+    }
+    printf("\n\n\n");
+         if(readdir2(1,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"Second entry size: %x\n",directoryentry.fileSize);
+    }
+                 if(readdir2(1,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"Second entry size: %x\n",directoryentry.fileSize);
+    }
+                 if(readdir2(1,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"Second entry size: %x\n",directoryentry.fileSize);
+    }
+    printf("\n\n\n");
+
 
 
 
