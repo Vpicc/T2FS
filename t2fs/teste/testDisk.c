@@ -166,55 +166,72 @@ int main() {
     
 
     printOpenDirectories();
-    fprintf(stderr,"Testando readdir2\n\n");
+    fprintf(stderr,"\n\nTESTANDO READDIR2\n\n");
+
+    fprintf(stderr,"Utilizando handle 0\n\n");
 
 
-    if(readdir2(2,&directoryentry)==-1)
+    if(readdir2(openFile1,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{
         fprintf(stderr,"First entry name: %s\n",directoryentry.name);
         fprintf(stderr,"First entry fileType: %x\n",directoryentry.fileType);
-        fprintf(stderr,"First entry size: %x\n",directoryentry.fileSize);
+        fprintf(stderr,"First entry size: %x\n\n",directoryentry.fileSize);
     }
-        if(readdir2(2,&directoryentry)==-1)
+        if(readdir2(openFile1,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n");
+    else{
+        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"Second entry size: %x\n\n",directoryentry.fileSize);
+    }
+     if(readdir2(openFile1,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"Third entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"Third entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"Third entry size: %x\n",directoryentry.fileSize);
+    }
+    printf("\n\n");
+
+    fprintf(stderr,"Utilizando handle 2\n\n");
+         if(readdir2(openFile3,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"First entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"First entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"First entry size: %x\n\n",directoryentry.fileSize);
+    }
+                 if(readdir2(openFile3,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{
         fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
         fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
-        fprintf(stderr,"Second entry size: %x\n",directoryentry.fileSize);
+        fprintf(stderr,"Second entry size: %x\n\n",directoryentry.fileSize);
     }
-     if(readdir2(2,&directoryentry)==-1)
+                 if(readdir2(openFile3,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{
-        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
-        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
-        fprintf(stderr,"Second entry size: %x\n",directoryentry.fileSize);
-    }
-    printf("\n\n\n");
-         if(readdir2(1,&directoryentry)==-1)
-        fprintf(stderr,"Erro ao ler diretorio\n\n");
-    else{
-        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
-        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
-        fprintf(stderr,"Second entry size: %x\n",directoryentry.fileSize);
-    }
-                 if(readdir2(1,&directoryentry)==-1)
-        fprintf(stderr,"Erro ao ler diretorio\n\n");
-    else{
-        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
-        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
-        fprintf(stderr,"Second entry size: %x\n",directoryentry.fileSize);
-    }
-                 if(readdir2(1,&directoryentry)==-1)
-        fprintf(stderr,"Erro ao ler diretorio\n\n");
-    else{
-        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
-        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
-        fprintf(stderr,"Second entry size: %x\n",directoryentry.fileSize);
+        fprintf(stderr,"Third entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"Third entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"Third entry size: %x\n",directoryentry.fileSize);
     }
     printf("\n\n\n");
 
+    fprintf(stderr,"FECHANDO DIRETORIOs\n\n");
 
+       if(closedir2(openFile2) != 0)
+    fprintf(stderr,"Erro ao fechar handle %d\n\n", openFile2);
+        else
+    fprintf(stderr,"Fechando handle %d\n\n", openFile2);
+
+    printOpenDirectories();
+
+     fprintf(stderr,"\n\nAbrindo um root(/)\n\n",openFile2);
+
+    openFile2=opendir2("/");
+
+    printOpenDirectories();
 
 
     return 0;

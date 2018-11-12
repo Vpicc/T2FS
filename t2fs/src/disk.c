@@ -654,28 +654,21 @@ DIRENT2 searchDirByHandle(DIR2 handle){
 
     int i;
     int found=-1;
-    fprintf(stderr,"no search\n");
     struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
     int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
 
     for(i=0;i<10 && found==-1;i++){
         if(openDirectories[i].handle==handle){
-
-            fprintf(stderr,"\n%s\n",openDirectories[i].path.absolute);
             found=0;
  
             if(changeDir(openDirectories[i].path.absolute) == -1){
                 return setNullDirent();
             }
-            fprintf(stderr,"\nCluster:%d\n",currentPath.clusterNo);
             folderContent=readDataClusterFolder(currentPath.clusterNo);
             if(openDirectories[i].noReads<folderSize){
             openDirectories[i].directory.fileSize=folderContent[openDirectories[i].noReads].bytesFileSize;
             openDirectories[i].directory.fileType=folderContent[openDirectories[i].noReads].TypeVal;
             strcpy(openDirectories[i].directory.name,folderContent[openDirectories[i].noReads].name);
-            fprintf(stderr,"\n%s\n",openDirectories[i].directory.name);
-            fprintf(stderr,"\n%x\n",openDirectories[i].directory.fileType);
-            fprintf(stderr,"\n%x\n",openDirectories[i].directory.fileSize);
             openDirectories[i].noReads++;
             return openDirectories[i].directory;
         }
@@ -718,11 +711,30 @@ DIR2 openDir(char *path){
     return -3;
 }
 
-void printOpenDirectories() // Nao entendo pq ele coloca o ultimo path em todos os diretorios abertos
-{
+void printOpenDirectories(){
     int i;
     printf("\nLista de diretorios abertos:\n\n");
     for(i=0;i<10;i++)
         if(openDirectories[i].handle!=-1)
             fprintf(stderr,"%d: %s\tcluster:%d\n",i,openDirectories[i].path.absolute,openDirectories[i].path.clusterNo);
+}
+void freeOpenDirectory(DISK_DIR *opendirectory){
+    opendirectory->handle=-1;
+    opendirectory->noReads=0;
+    strcpy(opendirectory->path.absolute,"/");
+    opendirectory->path.clusterNo=superBlock.RootDirCluster;
+    opendirectory->directory=setNullDirent();
+}
+int closeDir(DIR2 handle){
+    int i;
+    int found=-1;
+    for(i=0;i<10 && found==-1;i++){
+        if(openDirectories[i].handle==handle){
+            freeOpenDirectory(&openDirectories[i]);
+            found=0;
+            return 0;
+        }
+    }
+    return -1;
+
 }

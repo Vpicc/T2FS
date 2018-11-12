@@ -280,7 +280,6 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 int readdir2 (DIR2 handle, DIRENT2 *dentry) {
 
 	DIRENT2 diretoryentry;
-	fprintf(stderr,"Erro no t2fs");
 	diretoryentry=searchDirByHandle(handle);
 	*dentry=diretoryentry;
 	if(strcmp(diretoryentry.name,"")==0)
@@ -300,7 +299,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int closedir2 (DIR2 handle) {
-    return -1;
+    return closeDir(handle);
 }
 
 
