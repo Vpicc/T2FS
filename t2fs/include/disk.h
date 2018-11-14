@@ -50,6 +50,10 @@ int isEmptyDir(int clusterNo);
 
 int deleteDir(char * path);
 
+int isInCluster(int clusterNo, char * fileName, BYTE TypeValEntrada);
+
+int isRightName(char * name);
+
 int writeZeroClusterFolderByName(int clusterNo, struct t2fs_record folder, char * fileName, BYTE TypeValEntrada);
 
 DIRENT2 searchDirByHandle(DIR2 handle);
