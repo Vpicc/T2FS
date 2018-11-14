@@ -391,8 +391,8 @@ int toAbsolutePath(char * path, char * currPath, char ** output) {
 
     strcpy(*output, buffer);
 
-    free(buffer);
-    free(pathcpy);
+   // free(buffer);
+   //free(pathcpy);
 
     return 0;
 
@@ -753,28 +753,28 @@ void setCurrentPathToRoot(){
     currentPath.clusterNo=superBlock.RootDirCluster;
 }
 
+
 DIR2 openDir(char *path){
     int i=0;
     int foundOpenDirectory=-1;
-    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+    char *absolute;
 
-    setCurrentPathToRoot();
 
-    if(changeDir(path)==-1)
+    if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
         return -1;
     
-    folderContent= readDataClusterFolder(currentPath.clusterNo);
-    if(folderContent[0].TypeVal != TYPEVAL_DIRETORIO){
-        return -2;
-    }
     while(foundOpenDirectory == -1 && i<10){
         if(openDirectories[i].handle == -1){
-            openDirectories[i].handle = i;
-            openDirectories[i].directory.fileSize=folderContent[i].bytesFileSize;
-            openDirectories[i].directory.fileType=folderContent[i].TypeVal;
-            strcpy(openDirectories[i].path.absolute,currentPath.absolute);
-            openDirectories[i].path.clusterNo=currentPath.clusterNo;
-            strcpy(openDirectories[i].directory.name,folderContent[i].name);
+            openDirectories[i].handle=i;
+
+            if(strcmp(absolute,"/") == 0 || strcmp(path,"/") ==0 ){
+             openDirectories[i].path.clusterNo=superBlock.RootDirCluster;
+             strcpy(openDirectories[i].path.absolute,"/");
+            }
+            else{
+               openDirectories[i].path.clusterNo=pathToCluster(absolute);
+             strcpy(openDirectories[i].path.absolute,absolute);
+           }
             foundOpenDirectory=0;
             return openDirectories[i].handle;
         }
