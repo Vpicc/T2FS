@@ -68,6 +68,8 @@ void setCurrentPathToRoot();
 
 int closeDir(DIR2 handle);
 
+int link(char * path, char ** output);
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;
