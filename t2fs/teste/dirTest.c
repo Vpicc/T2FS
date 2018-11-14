@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../include/disk.h"
+#include "../include/t2fs.h"
 #include "../include/apidisk.h"
 
-//gcc -m32 -o dirTest dirTest.c ../src/disk.c ../lib/apidisk.o -Wall -ggdb && ./dirTest
+//gcc -m32 -o dirTest dirTest.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./dirTest
+
 void printFAT(int sector) {
     int j;
     unsigned char buffer[SECTOR_SIZE];
@@ -117,6 +119,23 @@ int main() {
     printf("Path atual: %s\n", currentPath.absolute);
     printf("***Folders do DIR1:\n");    
     printFolders(currentPath.clusterNo);
+
     
+//Teste da função getcwd2
+    char * currentPathTest = malloc(15);
+    
+    if(getcwd2(currentPathTest, 15) == -1){
+        printf("Erro tamanho insuficiente\n");
+    }
+    else
+        printf("\ncurrentPathTest: %s\n", currentPathTest);
+
+    char * currentPathTest2 = malloc(3);
+    if(getcwd2(currentPathTest2, 3) == -1){
+        printf("Erro tamanho insuficiente\n");
+    }
+    else
+        printf("\ncurrentPathTest: %s\n", currentPathTest2);
+
     return 0;
 }
