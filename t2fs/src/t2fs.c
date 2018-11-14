@@ -178,7 +178,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int mkdir2 (char *pathname) {
-    return -1;
+    return mkdir(pathname);
 }
 
 
@@ -199,7 +199,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int rmdir2 (char *pathname) {
-    return -1;
+    return deleteDir(pathname);
 }
 
 
@@ -217,7 +217,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 		Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
-    return -1;
+    return changeDir(pathname);
 }
 
 
