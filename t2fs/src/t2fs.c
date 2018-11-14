@@ -237,7 +237,14 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 		Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int getcwd2 (char *pathname, int size) {
-    return -1;
+	if(strlen(currentPath.absolute) > size){
+		return -1;
+	}
+	else{
+		memset(pathname,'\0',strlen(pathname));
+		strcpy(pathname, currentPath.absolute);
+		return 0;
+	}
 }
 
 
