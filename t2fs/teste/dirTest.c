@@ -143,7 +143,6 @@ int main() {
     }
     printf("Path atual depois da delecao: %s\n", currentPath.absolute);
     printf("Indo para o direito dir1\n");
-    changeDir("../dir1");
     if(changeDir("../dir1") == -1){
         printf("\nError change ../dir1\n");
     }
