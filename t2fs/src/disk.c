@@ -735,13 +735,11 @@ DIRENT2 setNullDirent()
 DIRENT2 searchDirByHandle(DIR2 handle){
 
     int i;
-    int found=-1;
     struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
     int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
 
-    for(i=0;i<10 && found==-1;i++){
+    for(i=0;i<10;i++){
         if(openDirectories[i].handle==handle){
-            found=0;
  
             if(changeDir(openDirectories[i].path.absolute) == -1){
                 return setNullDirent();
@@ -766,7 +764,6 @@ void setCurrentPathToRoot(){
 
 DIR2 openDir(char *path){
     int i;
-    int foundOpenDirectory=-1;
     char *absolute;
 
     if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
@@ -783,7 +780,6 @@ DIR2 openDir(char *path){
                 openDirectories[i].path.clusterNo=pathToCluster(absolute);
                 strcpy(openDirectories[i].path.absolute,absolute);
            }
-            foundOpenDirectory=0;
             return openDirectories[i].handle;
         }
     }
@@ -808,11 +804,9 @@ void freeOpenDirectory(DISK_DIR *opendirectory){
 
 int closeDir(DIR2 handle){
     int i;
-    int found=-1;
-    for(i=0;i<10 && found==-1;i++){
+    for(i=0;i<10;i++){
         if(openDirectories[i].handle==handle){
             freeOpenDirectory(&openDirectories[i]);
-            found=0;
             return 0;
         }
     }
@@ -880,15 +874,14 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
     }
 
     //se o absolute do filename for / entao ele aponta para o root
-    if(strcmp(absolutefilename,"/")){
+    if(strcmp(absolutefilename,"/") == 0){
         clusterFile = superBlock.RootDirCluster;
     }
     else//se nao for, então tem q achar onde fica
     {
-
         clusterFile = pathToCluster(clusterFileHelper);
         if(clusterFile == -1){
-                fprintf(stderr,"erro path cluster file: %s",clusterFileHelper);
+
         free(absolute);
         free(absolutefilename);
         free(firstOut);
@@ -898,6 +891,7 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
         return -1;
     }
     }
+    
     //se o firstOut do absolute for '/', então DotDot vai ser o raiz
     if(strlen(firstOut) == 1 && firstOut[0]== '/'){
         clusterDotDot = superBlock.RootDirCluster;
@@ -906,7 +900,6 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
     {
         clusterDotDot = pathToCluster(firstOut);
         if(clusterDotDot == -1){
-            fprintf(stderr,"erro path cluster dot dot");
         free(absolute);
         free(absolutefilename);
         free(firstOut);
@@ -916,10 +909,10 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
         return -1;
     }
     }
-    //fprintf(stderr,"CLUSTER PARA ONDE O SOFTLINK APONTA: %d\n\n", clusterFile);
-    //fprintf(stderr,"CLUSTER DO SOFTLINK CRIADO: %d\n\n", firstClusterFreeInFAT);
-    //fprintf(stderr,"CLUSTER DA PASTA DO SOFTLINK: %d\n\n", clusterDotDot);
-    //fprintf(stderr, "ABSOLUTE FILENAME: %s\n\n", absolutefilename);
+    fprintf(stderr,"CLUSTER PARA ONDE O SOFTLINK APONTA: %d\n\n", clusterFile);
+    fprintf(stderr,"CLUSTER DO SOFTLINK CRIADO: %d\n\n", firstClusterFreeInFAT);
+    fprintf(stderr,"CLUSTER DA PASTA DO SOFTLINK: %d\n\n", clusterDotDot);
+    fprintf(stderr, "ABSOLUTE FILENAME: %s\n\n", absolutefilename);
 
     struct t2fs_record link;
 

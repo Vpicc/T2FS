@@ -61,7 +61,7 @@ int main() {
     char aEveryWhere[1024];
     char* escrita = "Esse eh o teste no cluster 23..";
     int num = 13333;
-    DIR2 openFile1,openFile2,openFile3;
+    DIR2 opend1,opend2,opend3;
     DWORD value;
     unsigned char* numLtlEnd;
     int num2 = 91532899;
@@ -154,14 +154,14 @@ int main() {
     fprintf(stderr,"ABRINDO DIRETORIOs\n\n");
 
 
-    openFile1=opendir2("/dir1");
-    fprintf(stderr,"Retorno da funcao opendir procurando por dir1 = %d\n\n",openFile1);
+    opend1=opendir2("/dir1");
+    fprintf(stderr,"Retorno da funcao opendir procurando por dir1 = %d\n\n",opend1);
 
-    openFile2=opendir2("./dir1");
-     fprintf(stderr,"Retorno da funcao opendir procurando por dir1 = %d\n\n",openFile2);
+    opend2=opendir2("./dir1");
+     fprintf(stderr,"Retorno da funcao opendir procurando por dir1 = %d\n\n",opend2);
 
-    openFile3=opendir2("/");
-        fprintf(stderr,"Retorno da funcao opendir procurando por root(/) = %d\n\n",openFile3);
+    opend3=opendir2("/");
+        fprintf(stderr,"Retorno da funcao opendir procurando por root(/) = %d\n\n",opend3);
     
     
 
@@ -171,21 +171,21 @@ int main() {
     fprintf(stderr,"Utilizando handle 0\n\n");
 
 
-    if(readdir2(openFile1,&directoryentry)==-1)
+    if(readdir2(opend1,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{
         fprintf(stderr,"First entry name: %s\n",directoryentry.name);
         fprintf(stderr,"First entry fileType: %x\n",directoryentry.fileType);
         fprintf(stderr,"First entry size: %x\n\n",directoryentry.fileSize);
     }
-        if(readdir2(openFile1,&directoryentry)==-1)
+        if(readdir2(opend1,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n");
     else{
         fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
         fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
         fprintf(stderr,"Second entry size: %x\n\n",directoryentry.fileSize);
     }
-     if(readdir2(openFile1,&directoryentry)==-1)
+     if(readdir2(opend1,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{
         fprintf(stderr,"Third entry name: %s\n",directoryentry.name);
@@ -195,21 +195,21 @@ int main() {
     printf("\n\n");
 
     fprintf(stderr,"Utilizando handle 2\n\n");
-         if(readdir2(openFile3,&directoryentry)==-1)
+         if(readdir2(opend3,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{
         fprintf(stderr,"First entry name: %s\n",directoryentry.name);
         fprintf(stderr,"First entry fileType: %x\n",directoryentry.fileType);
         fprintf(stderr,"First entry size: %x\n\n",directoryentry.fileSize);
     }
-                 if(readdir2(openFile3,&directoryentry)==-1)
+                 if(readdir2(opend3,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{
         fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
         fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
         fprintf(stderr,"Second entry size: %x\n\n",directoryentry.fileSize);
     }
-                 if(readdir2(openFile3,&directoryentry)==-1)
+                 if(readdir2(opend3,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{
         fprintf(stderr,"Third entry name: %s\n",directoryentry.name);
@@ -220,26 +220,30 @@ int main() {
 
     fprintf(stderr,"FECHANDO DIRETORIOs\n\n");
 
-       if(closedir2(openFile2) != 0)
-    fprintf(stderr,"Erro ao fechar handle %d\n\n", openFile2);
+       if(closedir2(opend2) != 0)
+    fprintf(stderr,"Erro ao fechar handle %d\n\n", opend2);
         else
-    fprintf(stderr,"Fechando handle %d\n\n", openFile2);
+    fprintf(stderr,"Fechando handle %d\n\n", opend2);
+
+        if(closedir2(opend2) != 0)
+    fprintf(stderr,"Erro ao fechar handle %d\n\n", opend2);
+        else
+    fprintf(stderr,"Fechando handle %d\n\n", opend2);
 
     printOpenDirectories();
 
     fprintf(stderr,"\n\nAbrindo um root(/)\n\n");
 
-    openFile2=opendir2("/");
+    opend2=opendir2("/");
 
     printOpenDirectories();
 
-  /*
      fprintf(stderr,"\n\nCriando um softlink\n\n");
-  if(ln2("/dir1/SOFLINK_TO_ABRA2","/dir2/abra2") != 0){
+  if(ln2("/dir1/SOFTLINK_TO_FILE1","/file2.txt") != 0){
      fprintf(stderr,"\n\nERRO AO CRIAR SOFTLINK(/)\n\n");
     }else{
         for(i=0;i<15;i++){
-                 if(readdir2(openFile1,&directoryentry)==-1)
+        if(readdir2(opend1,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{
         fprintf(stderr,"Entry name: %s\n",directoryentry.name);
@@ -248,20 +252,28 @@ int main() {
     }    
     }
     }
-*/
+
          fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para ROOT\n\n");
 
-        printDataCluster(17);
+        printDataCluster(19);
 
          fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para DIR1\n\n");
 
-        printDataCluster(20);
+        printDataCluster(17);
 
+        fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para /file1.txt\n\n");
 
-         fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para ABRA2\n\n");
-
-        printDataCluster(24);
-
+        printDataCluster(21);
+    printFAT(0);
+    readInFAT(19, &value);
+    printf("\nCLUSTER 19 NA FAT APONTA PARA CLUSTER 2 (32): %x\n",value);
+        readInFAT(17, &value);
+    printf("\nCLUSTER 17 NA FAT APONTA PARA CLUSTER 5 (35): %x\n",value);
+            readInFAT(21, &value);
+    printf("\nCLUSTER 21 NA FAT APONTA PARA CLUSTER 3 (33): %x\n",value);
+closedir2(opend1);
+closedir2(opend2);
+closedir2(opend3);
 
 
     return 0;
