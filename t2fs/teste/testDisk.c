@@ -5,7 +5,7 @@
 #include "../include/apidisk.h"
 #include "../include/t2fs.h"
 
-//gcc -o testeDisk testDisk.c ../src/disk.c ../lib/apidisk.o -Wall -ggdb && ./testeDisk
+//gcc -o testeDisk testDisk.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeDisk
 
 void printFAT(int sector) {
     int j;
@@ -61,7 +61,7 @@ int main() {
     char aEveryWhere[1024];
     char* escrita = "Esse eh o teste no cluster 23..";
     int num = 13333;
-    DIR2 openFile0,openFile1,openFile2,openFile3;
+    DIR2 openFile1,openFile2,openFile3;
     DWORD value;
     unsigned char* numLtlEnd;
     int num2 = 91532899;
@@ -227,7 +227,7 @@ int main() {
 
     printOpenDirectories();
 
-     fprintf(stderr,"\n\nAbrindo um root(/)\n\n",openFile2);
+    fprintf(stderr,"\n\nAbrindo um root(/)\n\n");
 
     openFile2=opendir2("/");
 

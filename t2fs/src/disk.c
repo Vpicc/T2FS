@@ -8,8 +8,8 @@
 int disk_initialized = 0;
 
 //aa
-DISK_FILE openFiles[10];
-DISK_DIR openDirectories[10];
+DISK_FILE openFiles[MAX_NUM_FILES];
+DISK_DIR openDirectories[MAX_NUM_FILES];
 
 DWORD convertToDword(unsigned char* buffer) {
     return (DWORD) ((DWORD)buffer[0] | (DWORD)buffer[1] << 8 |(DWORD)buffer[2] << 16 |(DWORD)buffer[3] << 24 );
@@ -64,7 +64,7 @@ int init_disk() {
         for (i = 0; i < 10; i++) {
             openFiles[i].file = -1;
             openFiles[i].currPointer = -1;
-            strcpy(openFiles[i].name,"");
+            openFiles[i].clusterNo = -1;
             openDirectories[i].handle = -1;
             openDirectories[i].noReads=0;
             openDirectories[i].path.absolute=malloc(sizeof(100));
@@ -213,7 +213,6 @@ unsigned char* readDataCluster (int clusterNo){
 }
 
 int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
-    int i;
     int j;
     int k = 0;
     unsigned int sectorToWrite;
@@ -230,7 +229,24 @@ int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
         newBuffer[j] = buffer[j - position];
     }
 
-    for(i = position + size; i < SECTOR_SIZE*superBlock.SectorsPerCluster; i++){
+    for(sectorToWrite = sector; sectorToWrite < (sector + superBlock.SectorsPerCluster); sectorToWrite++) {
+        write_sector(sectorToWrite, newBuffer + k);
+        k += 256;
+    }
+    free(newBuffer);
+    return position + size;
+}
+
+int truncateCluster(int clusterNo, int position) {
+    int i;
+    int k = 0;
+    unsigned int sectorToWrite;
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+    unsigned char* newBuffer = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
+
+    readCluster(clusterNo, newBuffer);
+
+    for(i = position; i < SECTOR_SIZE*superBlock.SectorsPerCluster; i++){
         newBuffer[i] = '\0';
     }
     for(sectorToWrite = sector; sectorToWrite < (sector + superBlock.SectorsPerCluster); sectorToWrite++) {
@@ -238,7 +254,7 @@ int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
         k += 256;
     }
     free(newBuffer);
-    return position + size;
+    return 0;
 }
 
 int pathToCluster(char* path) {
@@ -259,6 +275,10 @@ int pathToCluster(char* path) {
         currentCluster = superBlock.RootDirCluster;
     }else {
         currentCluster = currentPath.clusterNo;
+    }
+
+    if (strcmp(pathcpy,"/") == 0) {
+        return superBlock.RootDirCluster;
     }
 
     pathTok = strtok(pathcpy,"/");
@@ -398,7 +418,7 @@ int toAbsolutePath(char * path, char * currPath, char ** output) {
 
 }
 /*
-* INPUT:/aaa/ccc/aa/bb OUT: /aaa/ccc/aa/ AND bb
+* INPUT:/aaa/ccc/aa/bb OUT: /aaa/ccc/aa AND bb
 */
 int separatePath(char * path, char ** FristStringOutput, char ** SecondStringOutput) {
     const char dir_div = '/';
@@ -422,16 +442,17 @@ int changeDir(char * path){
     char * absolute;
     int clusterNewPath;
 
-    if(strlen(path) == 0){ //Se a string for vazia n altera o lugar
-        return 0;
+    if(strlen(path) == 0){ //Modifiquei 1 por 0 pois imagino que aqui vc esteja verificando se não é uma string vazia - SAMUEL
+        return -1;
     }
-    if(strcmp(path,"/") == 0){ // "/"" vai para a RAIZ
-        currentPath.clusterNo = superBlock.RootDirCluster;
+    if(strcmp(path,"/")==0){ //Nao estava conseguindo retornar o root - SAMUEL
+        currentPath.clusterNo=superBlock.RootDirCluster;
         strcpy(currentPath.absolute,"/");
         return 0;
     }
 
     if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1){
+        //printf("AbsoluteA: %s", absolute);
         free(absolute);
         return -1;
     }
@@ -439,11 +460,11 @@ int changeDir(char * path){
     if(strlen(absolute)== 1 && absolute[0] == '/'){
         clusterNewPath = superBlock.RootDirCluster;
     }
-    else{
+    else
         clusterNewPath = pathToCluster(absolute);
-    }
 
-    if(clusterNewPath == -1){//se o pathname n existir
+    if(clusterNewPath == -1){
+        //printf("Absolute: %s\n", absolute);
         free(absolute);
         return -1;
     }
@@ -456,7 +477,6 @@ int changeDir(char * path){
     return 0;    
 }
 int mkdir(char * path){
-
     char * absolute;
     char * firstOut;
     char * secondOut;
@@ -464,50 +484,27 @@ int mkdir(char * path){
     int clusterDotDot;
 
     toAbsolutePath(path, currentPath.absolute, &absolute);
+    //printf("\nAboslute: %s", absolute);
     separatePath(absolute, &firstOut, &secondOut);
+    //printf("\nfirstOut: %s", firstOut);
+    //printf("\necondOut: %s", secondOut);
 
-    if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){//se n achar um cluster livre na fat
+    if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){
         free(absolute);
         free(firstOut);
         free(secondOut);
         return -1;
     }
-    if(strlen(secondOut) == 0){//diretorio sem nome
-        free(absolute);
-        free(firstOut);
-        free(secondOut);
-        return -1;
-    }
-    if(!(isRightName(secondOut))){//diretorios n podem ter esse nome
-        free(absolute);
-        free(firstOut);
-        free(secondOut);
-        return -1;
-    }
-
-//se o firstOut do absolute for '/', então DotDot vai ser o raiz
+//se o firstOut do absolute for '/', então DotDot vai ser o currentPath
     if(strlen(firstOut) == 1 && firstOut[0]== '/'){
         clusterDotDot = superBlock.RootDirCluster;
     }
     else//se nao for, então tem q achar onde fica
-        {
-            clusterDotDot = pathToCluster(firstOut);
-            if(clusterDotDot == -1){
-                free(absolute);
-                free(firstOut);
-                free(secondOut);
-                return -1;
-            }
-        }
+        clusterDotDot = pathToCluster(firstOut);
 
-    if(isInCluster(clusterDotDot, secondOut, TYPEVAL_DIRETORIO)){
-        printf("\nEste nome ja existe\n");
-        free(absolute);
-        free(firstOut);
-        free(secondOut);
-        return -1;
-    }
-
+//caminho dir anterior
+// printf("\nDot Dot: %d\n", clusterDotDot);
+  
     struct t2fs_record one_dot;
     struct t2fs_record two_dot;
     struct t2fs_record folder;
@@ -570,27 +567,25 @@ int deleteDir(char * path){
     unsigned int clusterDir;
     int sucess;
 
-    strcpy(auxCurrentPath,currentPath.absolute);
-
     if(toAbsolutePath(path, currentPath.absolute, &absolute)== -1){
+       // printf("\nRetorno no abolute\n");
         return -1;
     }
     if(separatePath(absolute, &firstOut, &secondOut)==-1){//secondOut tem o nome da pasta que tem q apagar
+        //printf("\nRetorno no separate\n");
         return -1;
     }
 
-//vai pro diretorio que quer apagar.
-    if(changeDir(path)== -1){//se o diretorio n existir n pode trocar de lugar
-        changeDir(auxCurrentPath);
-        return -1;        
+    if(changeDir(path)== -1){//vai pro direito que quer apagar.
+        //printf("\nRetorno no change\n");        
     }
     else{
+       // printf("\nEntrou Aqui\n");
         clusterDir = currentPath.clusterNo;
     }
 
     if(isEmptyDir(currentPath.clusterNo) && currentPath.clusterNo != superBlock.RootDirCluster){
         if(changeDir("../")== -1){//volta pro diretorio pai do diretorio que quer apagar
-            changeDir(auxCurrentPath);
             return -1;
         }
         clusterDirFather = currentPath.clusterNo;
@@ -617,16 +612,12 @@ int deleteDir(char * path){
             }
         }
         if(sucess){
-            changeDir(auxCurrentPath);
             return 0;
         }
-        else{
-            changeDir(auxCurrentPath);
+        else
             return -1;
-        }
     }
-    changeDir(auxCurrentPath);
-    return -1;
+    return 0;
 }
 
 int writeZeroClusterFolderByName(int clusterNo, struct t2fs_record folder, char * fileName, BYTE TypeValEntrada) {
@@ -748,7 +739,6 @@ DIRENT2 searchDirByHandle(DIR2 handle){
     }
     return setNullDirent();
 }
-
 void setCurrentPathToRoot(){
     strcpy(currentPath.absolute,"/");
     currentPath.clusterNo=superBlock.RootDirCluster;
@@ -791,7 +781,6 @@ void printOpenDirectories(){
         if(openDirectories[i].handle!=-1)
             fprintf(stderr,"%d: %s\tcluster:%d\n",i,openDirectories[i].path.absolute,openDirectories[i].path.clusterNo);
 }
-
 void freeOpenDirectory(DISK_DIR *opendirectory){
     opendirectory->handle=-1;
     opendirectory->noReads=0;
@@ -799,7 +788,6 @@ void freeOpenDirectory(DISK_DIR *opendirectory){
     opendirectory->path.clusterNo=superBlock.RootDirCluster;
     opendirectory->directory=setNullDirent();
 }
-
 int closeDir(DIR2 handle){
     int i;
     int found=-1;
@@ -813,3 +801,77 @@ int closeDir(DIR2 handle){
     return -1;
 
 }
+
+int link(char * path, char ** output) {
+    int i;
+    int isLink = 0;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    char * absolute;
+    char * pathToFile;
+    char * fileName;
+    int pathClusterNo;
+    int linkClusterNo;
+    toAbsolutePath(path, currentPath.absolute, &absolute);
+    //printf("\nAboslute: %s", absolute);
+    separatePath(absolute, &pathToFile, &fileName);
+    
+    pathClusterNo = pathToCluster(pathToFile);
+
+    if(pathClusterNo == -1) {
+        free(buffer);
+        free(absolute);
+        free(fileName);
+        free(pathToFile);
+        return -1;
+    }
+
+    readCluster(pathClusterNo, buffer);
+
+    // printf("\nfileName: %s", fileName);
+    for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
+        // printf("\nNumero de vezes do for %d\n", i);
+        if ( (strcmp((char *)buffer+i+1, fileName) == 0) && (((BYTE) buffer[i]) == TYPEVAL_LINK) && !isLink ) {
+            isLink = 1;
+        } 
+    }
+
+    if(!isLink) {
+        free(buffer);
+        free(absolute);
+        free(fileName);
+        free(pathToFile);
+        *output = malloc(sizeof(char)*(strlen(path)+1));
+        strcpy(*output,path);
+        return 0;
+    }
+    
+    linkClusterNo = pathToCluster(path);
+
+    memset(buffer,0,clusterByteSize);
+
+    readCluster(linkClusterNo,buffer);
+
+    *output = malloc(sizeof(char)*(strlen((char*)buffer)+1));
+    strcpy(*output,(char*)buffer);
+
+    free(buffer);
+    free(absolute);
+    free(fileName);
+    free(pathToFile);
+    return 0;
+}
+/*
+int truncateFile(FILE2 handle) {
+    int i;
+    DWORD value;
+    for(i = 0; i < MAX_NUM_FILES; i++) {
+        if
+    }
+
+	do{
+	readInFAT()
+	} while()
+}
+
+*/

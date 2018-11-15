@@ -63,6 +63,7 @@ int main() {
     char** testeToken;
     int testeTokenSize;
     char * testeAbsolute;
+    char * testeLink;
     init_disk();
 
     printFolders(2);
@@ -183,5 +184,9 @@ int main() {
     deleteDir("./abra3");
     printf("\n***Folders da Raiz:\n");
     printFolders(currentPath.clusterNo);
+
+    link("/link1",&testeLink);
+    printf("\n%s\n",testeLink);
+
     return 0;
 }

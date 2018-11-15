@@ -6,6 +6,8 @@
 
 #define BAD_SECTOR 0xFFFFFFFE
 
+#define MAX_NUM_FILES 10
+
 struct t2fs_superbloco superBlock;
 
 DWORD convertToDword(unsigned char* buffer);
@@ -68,10 +70,14 @@ void setCurrentPathToRoot();
 
 int closeDir(DIR2 handle);
 
+int link(char * path, char ** output);
+
+int truncateCluster(int clusterNo, int position);
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;
-    char name[51];
+    int clusterNo;
 } DISK_FILE;
 
 typedef struct currp {
