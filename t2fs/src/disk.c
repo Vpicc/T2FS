@@ -1035,7 +1035,7 @@ int link(char * path, char ** output) {
     return 0;
 }
 
-// WORK IN PROGRESS
+
 int truncateFile(FILE2 handle) {
     int i = 0;
     int fileNo;
@@ -1088,4 +1088,116 @@ int truncateFile(FILE2 handle) {
     }
 
     return 0;
+}
+
+// WORK IN PROGRESS
+int writeFile(FILE2 handle, char * buffer, int size) {
+    int i = 0;
+    int fileNo;
+    int found = 0;
+    int remainingSize = size;
+    int bytesWritten = 0;
+    int currentPointerInCluster;
+    int currentCluster;
+    int nextCluster;
+    // Arredondado para cima size/clustersize
+    int clusterSize = superBlock.SectorsPerCluster*SECTOR_SIZE;
+     
+
+    DWORD value;
+
+    while(i < MAX_NUM_FILES && !found){
+        if (handle == openFiles[i].file) {
+            fileNo = i;
+            found = 1;
+        }
+        i += 1;
+    }
+
+    if(!found) {
+        return -1;
+    }
+
+    currentPointerInCluster = openFiles[fileNo].currPointer;
+    nextCluster = openFiles[fileNo].clusterNo;
+    currentCluster = nextCluster;
+	
+    while(currentPointerInCluster >= clusterSize) {
+        if(readInFAT(nextCluster,&value) != 0) {
+            return -1;
+        }
+        nextCluster = (int)value;
+        if((DWORD)nextCluster != END_OF_FILE) {
+            currentCluster = nextCluster;
+        }
+        currentPointerInCluster -= (clusterSize);
+    }
+
+    // Escreve primeiro cluster que o current pointer está
+    if((remainingSize + currentPointerInCluster) <= (clusterSize)){
+        writeCluster(currentCluster,(unsigned char*)(buffer),currentPointerInCluster,size);
+        bytesWritten += size;
+        remainingSize -= size;
+    } else {
+        writeCluster(currentCluster,(unsigned char*)(buffer),currentPointerInCluster,(clusterSize - currentPointerInCluster));
+        remainingSize -= (clusterSize - currentPointerInCluster);
+        bytesWritten += (clusterSize - currentPointerInCluster);
+    }
+
+
+    // Escreve nos clusters que já existem no arquivo
+    while((DWORD)nextCluster != END_OF_FILE && remainingSize > 0) {
+        if(readInFAT(nextCluster,&value) != 0) {
+            return -1;
+        }
+        nextCluster = (int)value;
+        if((DWORD)nextCluster != END_OF_FILE) {
+            currentCluster = nextCluster;
+
+            if(remainingSize <= (clusterSize)){
+                writeCluster(currentCluster,(unsigned char*)(buffer + bytesWritten),0,remainingSize);
+                bytesWritten += remainingSize;
+                remainingSize -= remainingSize;
+            } else {
+                writeCluster(currentCluster,(unsigned char*)(buffer + bytesWritten),0,(clusterSize));
+                remainingSize -= (clusterSize);
+                bytesWritten += (clusterSize);
+            }
+        }
+    }
+
+    // Cria novos clusters e escreve no arquivo
+    while(remainingSize > 0) {
+        if(remainingSize <= (clusterSize)){
+            if(findFATOpenCluster(&nextCluster) != 0) {
+                return -1;
+            }
+            writeInFAT(currentCluster,nextCluster);
+            writeInFAT(nextCluster,END_OF_FILE);
+            writeCluster(nextCluster,(unsigned char*)(buffer + bytesWritten),0,remainingSize);
+            bytesWritten += remainingSize;
+            remainingSize -= remainingSize;
+        } else {
+            if(findFATOpenCluster(&nextCluster) != 0) {
+                return -1;
+            }
+            writeInFAT(currentCluster,nextCluster);
+            writeInFAT(nextCluster,END_OF_FILE);
+            writeCluster(nextCluster,(unsigned char*)(buffer + bytesWritten),0,(clusterSize));
+            currentCluster = nextCluster;
+            remainingSize -= (clusterSize);
+            bytesWritten += (clusterSize);
+        }
+    }
+
+    openFiles[fileNo].currPointer += bytesWritten; 
+
+    if(remainingSize != 0) {
+        return -1;
+    }
+
+    
+    return 0;
+
+
 }
