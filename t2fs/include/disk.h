@@ -72,6 +72,9 @@ int closeDir(DIR2 handle);
 
 int link(char * path, char ** output);
 
+FILE2 createFile(char * filename);
+int makeAnewHandle();
+
 //int truncateCluster(int clusterNo, int position);
 
 typedef struct diskf {

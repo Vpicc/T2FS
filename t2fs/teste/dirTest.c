@@ -65,7 +65,7 @@ int main() {
     if(mkdir("../abra") == -1){
         printf("\nError\n");
     }
-    if(mkdir("../abra") == -1){
+/*    if(mkdir("../abra") == -1){
         printf("\nError\n");
     }    
     printf("***Folders da ROOT:\n");
@@ -166,6 +166,6 @@ int main() {
     }
     else
         printf("\ncurrentPathTest: %s\n", currentPathTest2);
-
+*/
     return 0;
 }

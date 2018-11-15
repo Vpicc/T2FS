@@ -462,7 +462,6 @@ int mkdir(char * path){
     char * secondOut;
     int firstClusterFreeInFAT;
     int clusterDotDot;
-
     toAbsolutePath(path, currentPath.absolute, &absolute);
     separatePath(absolute, &firstOut, &secondOut);
 
@@ -517,7 +516,7 @@ int mkdir(char * path){
     one_dot.bytesFileSize = SECTOR_SIZE*superBlock.SectorsPerCluster;
     one_dot.clustersFileSize = 1;
     one_dot.firstCluster = firstClusterFreeInFAT;
-    writeDataClusterFolder(firstClusterFreeInFAT, one_dot);
+    writeDataClusterFolder(firstClusterFreeInFAT, one_dot);//vai ter sempre lugar pq o cluster estava vazio
 
 
     two_dot.TypeVal = TYPEVAL_DIRETORIO;
@@ -525,7 +524,7 @@ int mkdir(char * path){
     two_dot.bytesFileSize = SECTOR_SIZE*superBlock.SectorsPerCluster;
     two_dot.clustersFileSize = 1;
     two_dot.firstCluster = clusterDotDot;
-    writeDataClusterFolder(firstClusterFreeInFAT, two_dot);
+    writeDataClusterFolder(firstClusterFreeInFAT, two_dot);//vai ter sempre lugar pq o cluster estava vazio
 
 
     folder.TypeVal = TYPEVAL_DIRETORIO;
@@ -533,7 +532,9 @@ int mkdir(char * path){
     folder.bytesFileSize = SECTOR_SIZE*superBlock.SectorsPerCluster;;
     folder.clustersFileSize = 1;
     folder.firstCluster = firstClusterFreeInFAT;
-    writeDataClusterFolder(clusterDotDot, folder);
+    if(writeDataClusterFolder(clusterDotDot, folder) == -1){//se n estiver lugar para escrever dentro da folder
+        return -1;
+    }
 
     writeInFAT(firstClusterFreeInFAT, END_OF_FILE);
 
@@ -861,5 +862,76 @@ int link(char * path, char ** output) {
     free(absolute);
     free(fileName);
     free(pathToFile);
+    return 0;
+}
+
+FILE2 createFile(char * filename){
+    //char * absolute;
+    //char * firstOut;
+    //char * secondOut;
+    int firstClusterFreeInFAT;
+    //int clusterDotDot;
+    
+    int handle;
+    handle = makeAnewHandle();
+
+//n tinha espaço para adicionar um novo arquivos
+    if(handle == -1){
+        return -1; 
+    }
+
+    if(!isRightName(filename)){
+        return -1;
+    }
+//se n achar um cluster livre na fat
+    if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){
+        return -1;
+    }
+//se ja tiver um arquivo com esse nome nesse diretorio
+    if(isInCluster(currentPath.clusterNo, filename, TYPEVAL_REGULAR)){
+        return -1;
+    }
+
+//criação da estrutura
+    struct t2fs_record toRecord;
+    struct diskf newFileToRecord;
+//declaração de seus atributos
+    toRecord.TypeVal = TYPEVAL_REGULAR;
+    strcpy(toRecord.name, filename);
+    toRecord.bytesFileSize = 0;
+    toRecord.clustersFileSize = 1;
+    toRecord.firstCluster = firstClusterFreeInFAT;
+
+//escrita no diretorio
+    if(writeDataClusterFolder(currentPath.clusterNo, toRecord) == - 1){//se n tiver espaço na folder
+        return -1;
+    }
+//marcação na fat de cluster ocupado
+    writeInFAT(firstClusterFreeInFAT, END_OF_FILE);
+
+    newFileToRecord.clusterNo = firstClusterFreeInFAT;
+    newFileToRecord.currPointer = 0;
+    newFileToRecord.file = handle;
+
+//atualização do openFiles
+    memcpy(&openFiles[handle], &newFileToRecord, sizeof(struct diskf));
+
+    return 0;
+}
+
+int makeAnewHandle(){
+    int i;
+    
+    for(i = 0; i < MAX_NUM_FILES; i++){
+        if(openFiles[i].file == -1){
+            return i+1;
+        }
+    }
+    //se chegou até aqui é pq n encontrou nenhuma posição no array de 10 para botar um novo arquivo
+    return -1;
+}
+
+int updateDiskFile(struct diskf FileToUpdate, int handle){
+    memcpy(&openFiles[handle], &FileToUpdate, sizeof(struct diskf));
     return 0;
 }
