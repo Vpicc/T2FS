@@ -895,12 +895,12 @@ FILE2 createFile(char * filename){
     int clusterToRecordFile;
 
     if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
-        printf("\nERRO INESPERADO\n");
+        printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -1;
     }
 
     if(separatePath(absolute, &firstOut, &secondOut)){
-        printf("\nERRO INESPERADo\n");
+        printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -1;
     }
     clusterToRecordFile = pathToCluster(firstOut);
@@ -938,6 +938,7 @@ FILE2 createFile(char * filename){
         return -1;
     }
 //se ja tiver um arquivo com esse nome nesse diretorio
+//TODO: TEM Q APGAR O TEM E COLOCAR O NOVO.
     if(isInCluster(clusterToRecordFile, secondOut, TYPEVAL_REGULAR)){
         free(absolute);
         free(firstOut);
@@ -945,9 +946,9 @@ FILE2 createFile(char * filename){
         return -1;
     }
 
-//criação da estrutura
+//criação das estruturas
     struct t2fs_record toRecord;
-    struct diskf newFileToRecord;
+
 //declaração de seus atributos
     toRecord.TypeVal = TYPEVAL_REGULAR;
     strcpy(toRecord.name, secondOut);
@@ -962,14 +963,8 @@ FILE2 createFile(char * filename){
 //marcação na fat de cluster ocupado
     writeInFAT(firstClusterFreeInFAT, END_OF_FILE);
 
-    newFileToRecord.clusterNo = firstClusterFreeInFAT;
-    newFileToRecord.currPointer = 0;
-    newFileToRecord.file = handle;
-
-//atualização do openFiles
-    memcpy(&openFiles[handle], &newFileToRecord, sizeof(struct diskf));
-
-    return 0;
+//retorna o handle já colocando ele no array de opens
+    return (openFile (filename));
 }
 
 int makeAnewHandle(){
@@ -977,20 +972,63 @@ int makeAnewHandle(){
     
     for(i = 0; i < MAX_NUM_FILES; i++){
         if(openFiles[i].file == -1){
-            return i+1;
+            return (i+1);
         }
     }
     //se chegou até aqui é pq n encontrou nenhuma posição no array de 10 para botar um novo arquivo
     return -1;
 }
 
+FILE2 openFile (char * filename){
+    char * absolute;
+    char * firstOut;
+    char * secondOut;
+    //int firstClusterFreeInFAT;
+    int handle;
+    handle = makeAnewHandle();
+    int firstClusterOfFile;
+
+    if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
+        printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        return -1;
+    }
+
+    if(separatePath(absolute, &firstOut, &secondOut)){
+        printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        return -1;
+    }
+    firstClusterOfFile = pathToCluster(absolute);
+//caminho inexistente
+    if(firstClusterOfFile == -1){
+        return -1;
+    }
+//n tinha espaço para adicionar um novo arquivos
+    if(handle == -1){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1; 
+    }
+    struct diskf newFileToRecord;
+
+    newFileToRecord.clusterNo = firstClusterOfFile;
+    newFileToRecord.currPointer = 0;
+    newFileToRecord.file = handle;
+
+//atualização do openFiles
+    memcpy(&openFiles[handle-1], &newFileToRecord, sizeof(struct diskf));
+    
+    return newFileToRecord.file;
+}
+
 void printOpenFiles(){
     int i;
-    printf("\nLista de arquivos abertos:\n\n");
+    printf("\nLista de arquivos abertos:");
     for(i=0;i<10;i++){
         if(openFiles[i].file != -1){
             printf("\nArquivo de handle: %d\n", openFiles[i].file);
-            printf("Cluster inicial deste arquivo: %d", openFiles[i].clusterNo);
+            printf("Cluster inicial deste arquivo: %d\n", openFiles[i].clusterNo);
+            printf("CurrPointer: %d\n", openFiles[i].currPointer);
         }
     }
 }

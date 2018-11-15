@@ -75,7 +75,10 @@ int link(char * path, char ** output);
 FILE2 createFile(char * filename);
 
 int makeAnewHandle();
+
 void printOpenFiles();
+
+FILE2 openFile (char * filename);
 
 
 //int truncateCluster(int clusterNo, int position);
