@@ -73,6 +73,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o han
 	Em caso de erro, deve ser retornado um valor negativo
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
+	
     return -1;
 }
 
@@ -141,6 +142,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int truncate2 (FILE2 handle) {
+	
     return -1;
 }
 

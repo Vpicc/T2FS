@@ -6,6 +6,8 @@
 
 #define BAD_SECTOR 0xFFFFFFFE
 
+#define MAX_NUM_FILES 10
+
 struct t2fs_superbloco superBlock;
 
 DWORD convertToDword(unsigned char* buffer);

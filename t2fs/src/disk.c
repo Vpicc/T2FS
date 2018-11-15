@@ -8,8 +8,8 @@
 int disk_initialized = 0;
 
 //aa
-DISK_FILE openFiles[10];
-DISK_DIR openDirectories[10];
+DISK_FILE openFiles[MAX_NUM_FILES];
+DISK_DIR openDirectories[MAX_NUM_FILES];
 
 DWORD convertToDword(unsigned char* buffer) {
     return (DWORD) ((DWORD)buffer[0] | (DWORD)buffer[1] << 8 |(DWORD)buffer[2] << 16 |(DWORD)buffer[3] << 24 );
@@ -64,7 +64,7 @@ int init_disk() {
         for (i = 0; i < 10; i++) {
             openFiles[i].file = -1;
             openFiles[i].currPointer = -1;
-            strcpy(openFiles[i].name,"");
+            openFiles[i].clusterNo = -1;
             openDirectories[i].handle = -1;
             openDirectories[i].noReads=0;
             openDirectories[i].path.absolute=malloc(sizeof(100));
@@ -818,4 +818,17 @@ int link(char * path, char ** output) {
     free(pathToFile);
     return 0;
 }
+/*
+int truncateFile(FILE2 handle) {
+    int i;
+    DWORD value;
+    for(i = 0; i < MAX_NUM_FILES; i++) {
+        if
+    }
 
+	do{
+	readInFAT()
+	} while()
+}
+
+*/
