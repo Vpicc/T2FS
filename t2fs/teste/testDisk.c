@@ -233,6 +233,36 @@ int main() {
 
     printOpenDirectories();
 
+  /*
+     fprintf(stderr,"\n\nCriando um softlink\n\n");
+  if(ln2("/dir1/SOFLINK_TO_ABRA2","/dir2/abra2") != 0){
+     fprintf(stderr,"\n\nERRO AO CRIAR SOFTLINK(/)\n\n");
+    }else{
+        for(i=0;i<15;i++){
+                 if(readdir2(openFile1,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"Entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"Entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"Entry size: %x\n",directoryentry.fileSize);
+    }    
+    }
+    }
+*/
+         fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para ROOT\n\n");
+
+        printDataCluster(17);
+
+         fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para DIR1\n\n");
+
+        printDataCluster(20);
+
+
+         fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para ABRA2\n\n");
+
+        printDataCluster(24);
+
+
 
     return 0;
 }

@@ -70,6 +70,8 @@ void setCurrentPathToRoot();
 
 int closeDir(DIR2 handle);
 
+int createSoftlink(char *linkname,char *filename);
+
 int link(char * path, char ** output);
 
 int truncateCluster(int clusterNo, int position);
