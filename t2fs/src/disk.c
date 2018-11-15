@@ -977,6 +977,7 @@ int closeFile(FILE2 handle){
 }
 
 int deleteFile(char * filename){
+
     char * absolute;
     char * firstOut;
     char * secondOut;
@@ -985,25 +986,60 @@ int deleteFile(char * filename){
     unsigned char* bufferWithNulls = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
     DWORD FATrepresentation = 0;
 
+    //variaveis para a verificação
+    int i;
+    int isFile = 0;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    //
+
     memset(bufferWithNulls,'\0',SECTOR_SIZE*superBlock.SectorsPerCluster);// coloca /0 em todo o buffer
 
     if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
         printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
         return -1;
     }
 
     if(separatePath(absolute, &firstOut, &secondOut)){
         printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
         return -1;
     }
 
     if((clusterOfDir = pathToCluster(firstOut)) == -1){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
         return -1;
     }
 
     if((clusterToDelete = pathToCluster(absolute))== -1){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
         return -1;
     }
+
+//Verificação de se é um TYPE FILE mesmo
+    readCluster(clusterOfDir, buffer);
+    for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
+        if ( (strcmp((char *)buffer+i+1, secondOut) == 0) && (((BYTE) buffer[i]) == TYPEVAL_REGULAR) && !isFile ) {
+            isFile = 1;
+        } 
+    }
+    //se n for do tipo File, n pode deletar.
+    if(isFile == 0){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1;
+    }
+//Fim da verificação
 
     struct t2fs_record folderContent;
 
@@ -1014,6 +1050,9 @@ int deleteFile(char * filename){
     folderContent.firstCluster = 0;
 
     if(writeZeroClusterFolderByName(clusterOfDir, folderContent, secondOut, TYPEVAL_REGULAR) == -1){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
         return -1;
     }
 
@@ -1033,7 +1072,9 @@ int deleteFile(char * filename){
         }
 
     }
-
+    free(absolute);
+    free(firstOut);
+    free(secondOut);
     return 0;
 }
 
