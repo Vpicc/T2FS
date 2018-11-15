@@ -65,7 +65,7 @@ int main() {
     if(mkdir("../abra") == -1){
         printf("\nError\n");
     }
-/*    if(mkdir("../abra") == -1){
+    if(mkdir("../abra") == -1){
         printf("\nError\n");
     }    
     printf("***Folders da ROOT:\n");
@@ -150,9 +150,25 @@ int main() {
     printf("***Folders do DIR1:\n");    
     printFolders(currentPath.clusterNo);
 
+    printFAT(0);
+    if(changeDir("../") == -1){
+        printf("\nERROR 1\n");
+    }
+    if(createFile("./dir1/file5.txt") == -1){
+        printf("\nERRROR 2\n");
+    }
+    if(changeDir("./dir1") == -1){
+        printf("\nERRROR 3\n");
+    }
+    printf("\nFOLDERS DO DIREOTIRO DIR1, ONDE FOI CRIADO O FILE5");
+    printFolders(currentPath.clusterNo);
+    printf("\nPRINT DA FAT\n");
+    printFAT(0);
+    printf("\nPRINT DOS ARQUIVOS ABERTOS\n");
+    printOpenFiles();
 
 //Teste da função getcwd2
-    char * currentPathTest = malloc(15);
+/*    char * currentPathTest = malloc(15);
     
     if(getcwd2(currentPathTest, 15) == -1){
         printf("Erro tamanho insuficiente\n");

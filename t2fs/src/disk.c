@@ -886,29 +886,62 @@ int link(char * path, char ** output) {
 }
 
 FILE2 createFile(char * filename){
-    //char * absolute;
-    //char * firstOut;
-    //char * secondOut;
+    char * absolute;
+    char * firstOut;
+    char * secondOut;
     int firstClusterFreeInFAT;
-    //int clusterDotDot;
-    
     int handle;
     handle = makeAnewHandle();
+    int clusterToRecordFile;
 
-//n tinha espaço para adicionar um novo arquivos
-    if(handle == -1){
-        return -1; 
+    if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
+        printf("\nERRO INESPERADO\n");
+        return -1;
     }
 
-    if(!isRightName(filename)){
+    if(separatePath(absolute, &firstOut, &secondOut)){
+        printf("\nERRO INESPERADo\n");
         return -1;
+    }
+    clusterToRecordFile = pathToCluster(firstOut);
+//caminho inexistente
+    if(clusterToRecordFile == -1){
+        return -1;
+    }
+
+//arquivo sem nome
+    if(strlen(secondOut) == 0){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1;
+    }
+//diretorios n podem ter esse nome
+    if(!(isRightName(secondOut))){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1;
+    }
+//n tinha espaço para adicionar um novo arquivos
+    if(handle == -1){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1; 
     }
 //se n achar um cluster livre na fat
     if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
         return -1;
     }
 //se ja tiver um arquivo com esse nome nesse diretorio
-    if(isInCluster(currentPath.clusterNo, filename, TYPEVAL_REGULAR)){
+    if(isInCluster(clusterToRecordFile, secondOut, TYPEVAL_REGULAR)){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
         return -1;
     }
 
@@ -917,13 +950,13 @@ FILE2 createFile(char * filename){
     struct diskf newFileToRecord;
 //declaração de seus atributos
     toRecord.TypeVal = TYPEVAL_REGULAR;
-    strcpy(toRecord.name, filename);
+    strcpy(toRecord.name, secondOut);
     toRecord.bytesFileSize = 0;
     toRecord.clustersFileSize = 1;
     toRecord.firstCluster = firstClusterFreeInFAT;
 
 //escrita no diretorio
-    if(writeDataClusterFolder(currentPath.clusterNo, toRecord) == - 1){//se n tiver espaço na folder
+    if(writeDataClusterFolder(clusterToRecordFile, toRecord) == - 1){//se n tiver espaço na folder
         return -1;
     }
 //marcação na fat de cluster ocupado
@@ -951,7 +984,13 @@ int makeAnewHandle(){
     return -1;
 }
 
-int updateDiskFile(struct diskf FileToUpdate, int handle){
-    memcpy(&openFiles[handle], &FileToUpdate, sizeof(struct diskf));
-    return 0;
+void printOpenFiles(){
+    int i;
+    printf("\nLista de arquivos abertos:\n\n");
+    for(i=0;i<10;i++){
+        if(openFiles[i].file != -1){
+            printf("\nArquivo de handle: %d\n", openFiles[i].file);
+            printf("Cluster inicial deste arquivo: %d", openFiles[i].clusterNo);
+        }
+    }
 }

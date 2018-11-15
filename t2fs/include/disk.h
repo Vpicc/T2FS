@@ -72,16 +72,13 @@ int closeDir(DIR2 handle);
 
 int link(char * path, char ** output);
 
-<<<<<<< HEAD
 FILE2 createFile(char * filename);
+
 int makeAnewHandle();
+void printOpenFiles();
+
 
 //int truncateCluster(int clusterNo, int position);
-=======
-int truncateCluster(int clusterNo, int position);
-
-int truncateFile(FILE2 handle);
->>>>>>> 4cf9e9e51904dcdb51344ddbc81795d3eda152aa
 
 typedef struct diskf {
     FILE2 file;
