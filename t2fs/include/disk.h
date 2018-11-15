@@ -75,7 +75,7 @@ int truncateCluster(int clusterNo, int position);
 typedef struct diskf {
     FILE2 file;
     int currPointer;
-    char name[51];
+    int clusterNo;
 } DISK_FILE;
 
 typedef struct currp {
