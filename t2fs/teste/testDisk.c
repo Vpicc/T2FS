@@ -233,6 +233,23 @@ int main() {
 
     printOpenDirectories();
 
+    
+     fprintf(stderr,"\n\nCriando um softlink(/)\n\n");
+
+  if(ln2("/dir1/SOFLINK_DA_MASSA","/") != 0){
+     fprintf(stderr,"\n\nERRO AO CRIAR SOFTLINK(/)\n\n");
+    }else{
+                 if(readdir2(openFile1,&directoryentry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"Third entry name: %s\n",directoryentry.name);
+        fprintf(stderr,"Third entry fileType: %x\n",directoryentry.fileType);
+        fprintf(stderr,"Third entry size: %x\n",directoryentry.fileSize);
+    }    
+    }
+         fprintf(stderr,"\n\nPrintando o softlink criado anteriormente\n\n");
+    
+        printDataCluster(21);
 
     return 0;
 }

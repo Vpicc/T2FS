@@ -68,6 +68,8 @@ void setCurrentPathToRoot();
 
 int closeDir(DIR2 handle);
 
+int createSoftlink(char *linkname,char *filename);
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;

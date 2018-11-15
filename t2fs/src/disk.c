@@ -755,7 +755,7 @@ void setCurrentPathToRoot(){
 
 
 DIR2 openDir(char *path){
-    int i=0;
+    int i;
     int foundOpenDirectory=-1;
     char *absolute;
 
@@ -763,7 +763,7 @@ DIR2 openDir(char *path){
     if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
         return -1;
     
-    while(foundOpenDirectory == -1 && i<10){
+    for(i=0;i<10;i++){
         if(openDirectories[i].handle == -1){
             openDirectories[i].handle=i;
 
@@ -778,7 +778,6 @@ DIR2 openDir(char *path){
             foundOpenDirectory=0;
             return openDirectories[i].handle;
         }
-        i++;
     }
     return -3;
 }
@@ -811,4 +810,104 @@ int closeDir(DIR2 handle){
     }
     return -1;
 
+}
+int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
+
+char * absolutefilename;
+char * absolute;
+char * firstOut;
+char * secondOut;
+int firstClusterFreeInFAT;
+int clusterFile;
+int clusterDotDot;
+char *buffer = malloc(sizeof(char)*10);
+
+toAbsolutePath(linkname, currentPath.absolute, &absolute);
+toAbsolutePath(filename, currentPath.absolute, &absolutefilename);
+fprintf(stderr, "ABSOLUTE FILENAME: %s", absolutefilename);
+
+separatePath(absolute, &firstOut, &secondOut);
+
+if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){//se n achar um cluster livre na fat
+free(absolute);
+free(absolutefilename);
+free(firstOut);
+free(secondOut);
+free(buffer);
+return -1;
+}
+if(strlen(secondOut) == 0){//softlink sem nome
+free(absolute);
+free(absolutefilename);
+free(firstOut);
+free(secondOut);
+free(buffer);
+return -1;
+}
+if(!(isRightName(secondOut))){//softlink n pode ter esse nome
+free(absolute);
+free(absolutefilename);
+free(firstOut);
+free(secondOut);
+free(buffer);
+return -1;
+}
+
+//se o absolute do filename for / entao ele aponta para o root
+if(strcmp(absolutefilename,"/")){
+clusterFile = superBlock.RootDirCluster;
+}
+else//se nao for, então tem q achar onde fica
+{
+clusterFile = pathToCluster(absolutefilename);
+if(clusterFile == -1){
+free(absolute);
+free(absolutefilename);
+free(firstOut);
+free(secondOut);
+free(buffer); 
+return -1;
+}
+}
+//se o firstOut do absolute for '/', então DotDot vai ser o raiz
+if(strlen(firstOut) == 1 && firstOut[0]== '/'){
+clusterDotDot = superBlock.RootDirCluster;
+}
+else//se nao for, então tem q achar onde fica
+{
+clusterDotDot = pathToCluster(firstOut);
+if(clusterDotDot == -1){
+free(absolute);
+free(absolutefilename);
+free(firstOut);
+free(secondOut);
+free(buffer);
+return -1;
+}
+}
+
+struct t2fs_record link;
+
+link.TypeVal = TYPEVAL_LINK;
+strcpy(link.name, secondOut);
+link.bytesFileSize = sizeof(char)*strlen(absolutefilename);
+link.clustersFileSize = 1;
+link.firstCluster = firstClusterFreeInFAT;
+writeDataClusterFolder(clusterDotDot, link);
+fprintf(stderr,"CLUSTER DO FILE SOFTLINK: %d\n\n", clusterFile);
+fprintf(stderr,"CLUSTER DO SOFTLINK CRIADO: %d\n\n", firstClusterFreeInFAT);
+fprintf(stderr,"CLUSTER DA PASTA DO SOFTLINK: %d\n\n", clusterDotDot);
+fprintf(stderr, "ABSOLUTE FILENAME: %s\n\n", absolutefilename);
+
+sprintf(buffer,"%d",clusterFile);
+fprintf(stderr,"%s\n",buffer);
+writeCluster(firstClusterFreeInFAT,absolutefilename,0,link.bytesFileSize);
+writeInFAT(firstClusterFreeInFAT, convertToDword(buffer));
+free(absolute);
+free(absolutefilename);
+free(firstOut);
+free(secondOut);
+free(buffer);
+
+return 0;
 }
