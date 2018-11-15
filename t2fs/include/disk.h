@@ -84,6 +84,7 @@ void printOpenFiles();
 
 FILE2 openFile (char * filename);
 
+int closeFile(FILE2 handle);
 
 typedef struct diskf {
     FILE2 file;

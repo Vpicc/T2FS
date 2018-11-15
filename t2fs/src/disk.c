@@ -588,7 +588,7 @@ int deleteDir(char * path){
     char * auxCurrentPath = malloc (sizeof((strlen(currentPath.absolute))));//guarda onde estava
     unsigned int clusterDirFather;
     unsigned int clusterDir;
-    int sucess;
+    int sucess = 0;
 
     strcpy(auxCurrentPath,currentPath.absolute);
 
@@ -619,7 +619,7 @@ int deleteDir(char * path){
         struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
         folderContent = readDataClusterFolder(currentPath.clusterNo);
         for(i = 0; i < folderSize; i++) {
-            if(strcmp(folderContent[i].name, secondOut) == 0){
+            if((strcmp(folderContent[i].name, secondOut) == 0) && (folderContent[i].TypeVal == TYPEVAL_DIRETORIO)){
                     folderContent[i].TypeVal = TYPEVAL_INVALIDO;
                     strcpy(folderContent[i].name, "\0");
                     folderContent[i].bytesFileSize = 0;
@@ -960,6 +960,21 @@ FILE2 openFile (char * filename){
     
     return newFileToRecord.file;
 }
+
+int closeFile(FILE2 handle){
+    int i;
+    for(i = 0; i < MAX_NUM_FILES; i++){
+        if(openFiles[i].file == handle){//então tava aberto
+            printf("HANDLE ENCONTRNADO: %d", handle);
+            openFiles[i].file = -1;
+            openFiles[i].clusterNo = -1;
+            openFiles[i].currPointer = -1;
+            return 0;
+        }
+    }
+    return -1;
+}
+
 
 void printOpenFiles(){
     int i;
