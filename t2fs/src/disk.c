@@ -565,7 +565,7 @@ int deleteDir(char * path){
     char * absolute;
     char * firstOut;
     char * secondOut;
-    char * auxCurrentPath = malloc (sizeof((strlen(currentPath.absolute))));//guarda onde tava pra voltar
+    char * auxCurrentPath = malloc (sizeof((strlen(currentPath.absolute))));//guarda onde estava
     unsigned int clusterDirFather;
     unsigned int clusterDir;
     int sucess;
