@@ -213,7 +213,6 @@ unsigned char* readDataCluster (int clusterNo){
 }
 
 int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
-    int i;
     int j;
     int k = 0;
     unsigned int sectorToWrite;
@@ -230,7 +229,24 @@ int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
         newBuffer[j] = buffer[j - position];
     }
 
-    for(i = position + size; i < SECTOR_SIZE*superBlock.SectorsPerCluster; i++){
+    for(sectorToWrite = sector; sectorToWrite < (sector + superBlock.SectorsPerCluster); sectorToWrite++) {
+        write_sector(sectorToWrite, newBuffer + k);
+        k += 256;
+    }
+    free(newBuffer);
+    return position + size;
+}
+
+int truncateCluster(int clusterNo, int position) {
+    int i;
+    int k = 0;
+    unsigned int sectorToWrite;
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+    unsigned char* newBuffer = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
+
+    readCluster(clusterNo, newBuffer);
+
+    for(i = position; i < SECTOR_SIZE*superBlock.SectorsPerCluster; i++){
         newBuffer[i] = '\0';
     }
     for(sectorToWrite = sector; sectorToWrite < (sector + superBlock.SectorsPerCluster); sectorToWrite++) {
@@ -238,7 +254,7 @@ int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
         k += 256;
     }
     free(newBuffer);
-    return position + size;
+    return 0;
 }
 
 int pathToCluster(char* path) {
@@ -259,6 +275,10 @@ int pathToCluster(char* path) {
         currentCluster = superBlock.RootDirCluster;
     }else {
         currentCluster = currentPath.clusterNo;
+    }
+
+    if (strcmp(pathcpy,"/") == 0) {
+        return superBlock.RootDirCluster;
     }
 
     pathTok = strtok(pathcpy,"/");
