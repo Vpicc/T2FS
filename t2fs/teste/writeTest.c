@@ -57,23 +57,52 @@ void printFolders(int clusterNo) {
 
 int main() {
     int i;
-    char aEveryWhere[1024];
+    char aEveryWhere[8096];
+    FILE2 handle = 0;
 
     init_disk();
+
+    writeInFAT(60,END_OF_FILE);
+
+    openFiles[0].file = handle;
+    openFiles[0].clusterNo = 60;
+    openFiles[0].currPointer = 15;
     printf("\n\nEscrevendo no Cluster 23 a letra 'b' 1024 vezes, tamanho de um cluster");  
 
-    for(i = 0; i < 1024; i++){
+    for(i = 0; i < 8096; i++){
         aEveryWhere[i] = 'b';
     }
-    writeCluster(23, (unsigned char*) aEveryWhere,0,1024);
-    printDataSector(23);
-    printDataCluster(23);
 
-    writeCluster(23,(unsigned char*)"TESTANDO",6,9);
-    printDataSector(23);
-    printDataCluster(23);
-    truncateCluster(23,20);
-    printDataSector(23);
-    printDataCluster(23);
+
+    //truncateFile(handle);
+
+
+   //writeFile(handle,"aEveryWhere",11);
+
+    
+
+
+/*
+    printDataSector(60);
+    printDataSector(11);
+    printDataSector(13);
+    printDataSector(15);
+    printDataSector(16);
+    printDataSector(17);
+    printDataSector(18);
+    printDataSector(19);
+*/
+
+    //writeFile(handle,aEveryWhere,8092);
+
+    printFAT(0);
+
+
+    
+    
+
+    
+
+
     return 0;
 }

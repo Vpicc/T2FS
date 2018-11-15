@@ -150,8 +150,65 @@ int main() {
     printf("***Folders do DIR1:\n");    
     printFolders(currentPath.clusterNo);
 
+    if(changeDir("../") == -1){
+        printf("\nERROR 1\n");
+    }
+printf("PRINT DA FAT ANTES DA CRIACAO DOS ARQUIVOS");
+    printFAT(0);
+//Teste para a função createFile
+printf("\n\n*******TESTE PARA A CREATEFILE");
+    int handleFile5;
+    if((handleFile5 = createFile("./dir1/file5.txt")) == -1){
+        printf("\nERRROR createFile5\n");
+    }
+    printOpenFiles();
+    if((handleFile5 = createFile("./dir1/file6.txt")) == -1){
+        printf("\nERRROR createFile6\n");
+    }
+    printOpenFiles();
+    if((handleFile5 = createFile("./dir1/file7.txt")) == -1){
+        printf("\nERRROR createFile7\n");
+    }
+    printOpenFiles();
+    if((handleFile5 = createFile("./dir1/file8.txt")) == -1){
+        printf("\nERRROR createFile8\n");
+    }
+    printOpenFiles();
+    if((handleFile5 = createFile("./dir1/file9.txt")) == -1){
+        printf("\nERRROR createFile9\n");
+    }
+    if((handleFile5 = createFile("./dir1/file10.txt")) == -1){
+        printf("\nERRROR createFile10\n");
+    }
+    if((handleFile5 = createFile("./dir1/file11.txt")) == -1){
+        printf("\nERRROR createFile511\n");
+    }
+    if((handleFile5 = createFile("./dir1/file12.txt")) == -1){
+        printf("\nERRROR createFile12\n");
+    }
+    if((handleFile5 = createFile("./dir1/file13.txt")) == -1){
+        printf("\nERRROR createFile13\n");
+    }
+    if((handleFile5 = createFile("./dir1/file14.txt")) == -1){
+        printf("\nERRROR createFile14\n");
+    }
+    if((handleFile5 = createFile("./dir1/file5.txt")) == -1){
+        printf("\nERRROR createFile15\n");
+    }
+    printf("\nMudando para o direotrio './dir1' apois a criação de 11 arquivos(file5 ... file 14)");
+    if(changeDir("./dir1") == -1){
+        printf("\nERRROR 3\n");
+    }
+    printf("\nFOLDERS DO DIREOTIRO DIR1, ONDE FOI CRIADO OS ARQUIVOS");
+    printFolders(currentPath.clusterNo);
+    printf("\nPRINT DA FAT\n");
+    printFAT(0);
+    printf("\nPRINT DOS ARQUIVOS ABERTOS\n");
+    printOpenFiles();
 
+/*
 //Teste da função getcwd2
+printf("\n\n*******TESTE PARA A FUNCAO GETCWD2");
     char * currentPathTest = malloc(15);
     
     if(getcwd2(currentPathTest, 15) == -1){
@@ -166,6 +223,6 @@ int main() {
     }
     else
         printf("\ncurrentPathTest: %s\n", currentPathTest2);
-
+*/
     return 0;
 }

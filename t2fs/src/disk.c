@@ -8,7 +8,7 @@
 int disk_initialized = 0;
 
 //aa
-DISK_FILE openFiles[10];
+
 DISK_DIR openDirectories[10];
 
 DWORD convertToDword(unsigned char* buffer) {
@@ -468,6 +468,8 @@ int changeDir(char * path){
         return -1;
     }
 
+    free(currentPath.absolute);
+    currentPath.absolute = malloc(sizeof(char)*(strlen(absolute)+1));
     strcpy(currentPath.absolute, absolute);
     currentPath.clusterNo = clusterNewPath;
 
@@ -482,7 +484,6 @@ int mkdir(char * path){
     char * secondOut;
     int firstClusterFreeInFAT;
     int clusterDotDot;
-
     toAbsolutePath(path, currentPath.absolute, &absolute);
     separatePath(absolute, &firstOut, &secondOut);
 
@@ -537,7 +538,7 @@ int mkdir(char * path){
     one_dot.bytesFileSize = SECTOR_SIZE*superBlock.SectorsPerCluster;
     one_dot.clustersFileSize = 1;
     one_dot.firstCluster = firstClusterFreeInFAT;
-    writeDataClusterFolder(firstClusterFreeInFAT, one_dot);
+    writeDataClusterFolder(firstClusterFreeInFAT, one_dot);//vai ter sempre lugar pq o cluster estava vazio
 
 
     two_dot.TypeVal = TYPEVAL_DIRETORIO;
@@ -545,7 +546,7 @@ int mkdir(char * path){
     two_dot.bytesFileSize = SECTOR_SIZE*superBlock.SectorsPerCluster;
     two_dot.clustersFileSize = 1;
     two_dot.firstCluster = clusterDotDot;
-    writeDataClusterFolder(firstClusterFreeInFAT, two_dot);
+    writeDataClusterFolder(firstClusterFreeInFAT, two_dot);//vai ter sempre lugar pq o cluster estava vazio
 
 
     folder.TypeVal = TYPEVAL_DIRETORIO;
@@ -553,7 +554,9 @@ int mkdir(char * path){
     folder.bytesFileSize = SECTOR_SIZE*superBlock.SectorsPerCluster;;
     folder.clustersFileSize = 1;
     folder.firstCluster = firstClusterFreeInFAT;
-    writeDataClusterFolder(clusterDotDot, folder);
+    if(writeDataClusterFolder(clusterDotDot, folder) == -1){//se n estiver lugar para escrever dentro da folder
+        return -1;
+    }
 
     writeInFAT(firstClusterFreeInFAT, END_OF_FILE);
 
@@ -824,6 +827,154 @@ int closeDir(DIR2 handle){
 
 }
 
+FILE2 createFile(char * filename){
+    char * absolute;
+    char * firstOut;
+    char * secondOut;
+    int firstClusterFreeInFAT;
+    int handle;
+    handle = makeAnewHandle();
+    int clusterToRecordFile;
+
+    if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
+        printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        return -1;
+    }
+
+    if(separatePath(absolute, &firstOut, &secondOut)){
+        printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        return -1;
+    }
+    clusterToRecordFile = pathToCluster(firstOut);
+//caminho inexistente
+    if(clusterToRecordFile == -1){
+        return -1;
+    }
+
+//arquivo sem nome
+    if(strlen(secondOut) == 0){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1;
+    }
+//diretorios n podem ter esse nome
+    if(!(isRightName(secondOut))){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1;
+    }
+//n tinha espaço para adicionar um novo arquivos
+    if(handle == -1){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1; 
+    }
+//se n achar um cluster livre na fat
+    if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1;
+    }
+//se ja tiver um arquivo com esse nome nesse diretorio
+//TODO: TEM Q APGAR O TEM E COLOCAR O NOVO.
+    if(isInCluster(clusterToRecordFile, secondOut, TYPEVAL_REGULAR)){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1;
+    }
+
+//criação das estruturas
+    struct t2fs_record toRecord;
+
+//declaração de seus atributos
+    toRecord.TypeVal = TYPEVAL_REGULAR;
+    strcpy(toRecord.name, secondOut);
+    toRecord.bytesFileSize = 0;
+    toRecord.clustersFileSize = 1;
+    toRecord.firstCluster = firstClusterFreeInFAT;
+
+//escrita no diretorio
+    if(writeDataClusterFolder(clusterToRecordFile, toRecord) == - 1){//se n tiver espaço na folder
+        return -1;
+    }
+//marcação na fat de cluster ocupado
+    writeInFAT(firstClusterFreeInFAT, END_OF_FILE);
+
+//retorna o handle já colocando ele no array de opens
+    return (openFile (filename));
+}
+
+int makeAnewHandle(){
+    int i;
+    
+    for(i = 0; i < MAX_NUM_FILES; i++){
+        if(openFiles[i].file == -1){
+            return (i+1);
+        }
+    }
+    //se chegou até aqui é pq n encontrou nenhuma posição no array de 10 para botar um novo arquivo
+    return -1;
+}
+
+FILE2 openFile (char * filename){
+    char * absolute;
+    char * firstOut;
+    char * secondOut;
+    //int firstClusterFreeInFAT;
+    int handle;
+    handle = makeAnewHandle();
+    int firstClusterOfFile;
+
+    if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
+        printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        return -1;
+    }
+
+    if(separatePath(absolute, &firstOut, &secondOut)){
+        printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        return -1;
+    }
+    firstClusterOfFile = pathToCluster(absolute);
+//caminho inexistente
+    if(firstClusterOfFile == -1){
+        return -1;
+    }
+//n tinha espaço para adicionar um novo arquivos
+    if(handle == -1){
+        free(absolute);
+        free(firstOut);
+        free(secondOut);
+        return -1; 
+    }
+    struct diskf newFileToRecord;
+
+    newFileToRecord.clusterNo = firstClusterOfFile;
+    newFileToRecord.currPointer = 0;
+    newFileToRecord.file = handle;
+
+//atualização do openFiles
+    memcpy(&openFiles[handle-1], &newFileToRecord, sizeof(struct diskf));
+    
+    return newFileToRecord.file;
+}
+
+void printOpenFiles(){
+    int i;
+    printf("\nLista de arquivos abertos:");
+    for(i=0;i<10;i++){
+        if(openFiles[i].file != -1){
+            printf("\nArquivo de handle: %d\n", openFiles[i].file);
+            printf("Cluster inicial deste arquivo: %d\n", openFiles[i].clusterNo);
+            printf("CurrPointer: %d\n", openFiles[i].currPointer);
+        }
+    }
+}
+
 int link(char * path, char ** output) {
     int i;
     int isLink = 0;
@@ -884,7 +1035,7 @@ int link(char * path, char ** output) {
     return 0;
 }
 
-// WORK IN PROGRESS
+
 int truncateFile(FILE2 handle) {
     int i = 0;
     int fileNo;
@@ -899,6 +1050,7 @@ int truncateFile(FILE2 handle) {
             fileNo = i;
             found = 1;
         }
+        i += 1;
     }
 
     if(!found) {
@@ -907,31 +1059,145 @@ int truncateFile(FILE2 handle) {
 
     currentPointerInCluster = openFiles[fileNo].currPointer;
     nextCluster = openFiles[fileNo].clusterNo;
+    currentCluster = nextCluster;
 	
     while(currentPointerInCluster >= SECTOR_SIZE*superBlock.SectorsPerCluster) {
         if(readInFAT(nextCluster,&value) != 0) {
             return -1;
         }
+        nextCluster = (int)value;
         if((DWORD)nextCluster != END_OF_FILE) {
             currentCluster = nextCluster;
         }
-        nextCluster = (int)value;
         currentPointerInCluster -= SECTOR_SIZE*superBlock.SectorsPerCluster;
         
     }
 
-    truncateCluster(currentCluster,openFiles[fileNo].currPointer);
+    truncateCluster(currentCluster,currentPointerInCluster);
+
 
     while((DWORD)nextCluster != END_OF_FILE) {
         if(readInFAT(nextCluster,&value) != 0) {
             return -1;
         }
+        nextCluster = (int)value;
         if((DWORD)nextCluster != END_OF_FILE) {
             currentCluster = nextCluster;
+            truncateCluster(currentCluster,0);
         }
-        truncateCluster(currentCluster,0);
-        nextCluster = (int)value;
     }
 
     return 0;
+}
+
+// WORK IN PROGRESS
+int writeFile(FILE2 handle, char * buffer, int size) {
+    int i = 0;
+    int fileNo;
+    int found = 0;
+    int remainingSize = size;
+    int bytesWritten = 0;
+    int currentPointerInCluster;
+    int currentCluster;
+    int nextCluster;
+    // Arredondado para cima size/clustersize
+    int clusterSize = superBlock.SectorsPerCluster*SECTOR_SIZE;
+     
+
+    DWORD value;
+
+    while(i < MAX_NUM_FILES && !found){
+        if (handle == openFiles[i].file) {
+            fileNo = i;
+            found = 1;
+        }
+        i += 1;
+    }
+
+    if(!found) {
+        return -1;
+    }
+
+    currentPointerInCluster = openFiles[fileNo].currPointer;
+    nextCluster = openFiles[fileNo].clusterNo;
+    currentCluster = nextCluster;
+	
+    while(currentPointerInCluster >= clusterSize) {
+        if(readInFAT(nextCluster,&value) != 0) {
+            return -1;
+        }
+        nextCluster = (int)value;
+        if((DWORD)nextCluster != END_OF_FILE) {
+            currentCluster = nextCluster;
+        }
+        currentPointerInCluster -= (clusterSize);
+    }
+
+    // Escreve primeiro cluster que o current pointer está
+    if((remainingSize + currentPointerInCluster) <= (clusterSize)){
+        writeCluster(currentCluster,(unsigned char*)(buffer),currentPointerInCluster,size);
+        bytesWritten += size;
+        remainingSize -= size;
+    } else {
+        writeCluster(currentCluster,(unsigned char*)(buffer),currentPointerInCluster,(clusterSize - currentPointerInCluster));
+        remainingSize -= (clusterSize - currentPointerInCluster);
+        bytesWritten += (clusterSize - currentPointerInCluster);
+    }
+
+
+    // Escreve nos clusters que já existem no arquivo
+    while((DWORD)nextCluster != END_OF_FILE && remainingSize > 0) {
+        if(readInFAT(nextCluster,&value) != 0) {
+            return -1;
+        }
+        nextCluster = (int)value;
+        if((DWORD)nextCluster != END_OF_FILE) {
+            currentCluster = nextCluster;
+
+            if(remainingSize <= (clusterSize)){
+                writeCluster(currentCluster,(unsigned char*)(buffer + bytesWritten),0,remainingSize);
+                bytesWritten += remainingSize;
+                remainingSize -= remainingSize;
+            } else {
+                writeCluster(currentCluster,(unsigned char*)(buffer + bytesWritten),0,(clusterSize));
+                remainingSize -= (clusterSize);
+                bytesWritten += (clusterSize);
+            }
+        }
+    }
+
+    // Cria novos clusters e escreve no arquivo
+    while(remainingSize > 0) {
+        if(remainingSize <= (clusterSize)){
+            if(findFATOpenCluster(&nextCluster) != 0) {
+                return -1;
+            }
+            writeInFAT(currentCluster,nextCluster);
+            writeInFAT(nextCluster,END_OF_FILE);
+            writeCluster(nextCluster,(unsigned char*)(buffer + bytesWritten),0,remainingSize);
+            bytesWritten += remainingSize;
+            remainingSize -= remainingSize;
+        } else {
+            if(findFATOpenCluster(&nextCluster) != 0) {
+                return -1;
+            }
+            writeInFAT(currentCluster,nextCluster);
+            writeInFAT(nextCluster,END_OF_FILE);
+            writeCluster(nextCluster,(unsigned char*)(buffer + bytesWritten),0,(clusterSize));
+            currentCluster = nextCluster;
+            remainingSize -= (clusterSize);
+            bytesWritten += (clusterSize);
+        }
+    }
+
+    openFiles[fileNo].currPointer += bytesWritten; 
+
+    if(remainingSize != 0) {
+        return -1;
+    }
+
+    
+    return 0;
+
+
 }

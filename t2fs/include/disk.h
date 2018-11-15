@@ -76,6 +76,17 @@ int truncateCluster(int clusterNo, int position);
 
 int truncateFile(FILE2 handle);
 
+FILE2 createFile(char * filename);
+
+int makeAnewHandle();
+
+void printOpenFiles();
+
+FILE2 openFile (char * filename);
+
+int writeFile(FILE2 handle, char * buffer, int size);
+
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;
@@ -95,5 +106,7 @@ typedef struct diskd {
     struct currp path;
     DIRENT2 directory;
 } DISK_DIR;
+
+DISK_FILE openFiles[10];
 
 #endif
