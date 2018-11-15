@@ -468,6 +468,8 @@ int changeDir(char * path){
         return -1;
     }
 
+    free(currentPath.absolute);
+    currentPath.absolute = malloc(sizeof(char)*(strlen(absolute)+1));
     strcpy(currentPath.absolute, absolute);
     currentPath.clusterNo = clusterNewPath;
 
