@@ -62,14 +62,23 @@ int main() {
     printf("\n\n***************TESTE MakeDir***************\n");
 
     printf("\n*****Fazendo o direito 'abra' na Root.\n");
-    mkdir("../abra");
+    if(mkdir("../abra") == -1){
+        printf("\nError\n");
+    }
+    if(mkdir("../abra") == -1){
+        printf("\nError\n");
+    }    
     printf("***Folders da ROOT:\n");
     printFolders(2);
     printf("\n***Mudando para o diretorio recem criado '/abra'\n");
-    changeDir("abra");
+    if(changeDir("abra") == -1){
+        printf("\nError change abra\n");
+    }
     printf("Folders do direitorio '/abra':\n");
     printFolders(currentPath.clusterNo);
-    changeDir("..");
+    if(changeDir("..") == -1){
+        printf("\nError change ..\n");
+    }
     printFAT(0);
     printf("\n***Deletando o diretorio recem criado '/abra'\n");
     printf("\nPath atual antes da deleção: %s\n", currentPath.absolute);
@@ -81,46 +90,68 @@ int main() {
     printf("***Folde do diretorio que foi deletado '/abra':\n");
     printFolders(11);
     printf("\n\n***Fazendo o direito 'abra2' dentro do diretorio 'dir1' estando na raiz ");
-    mkdir("../dir1/abra2");
+    if(mkdir("../dir1/abra2") == -1){
+        printf("\nError mkdir abra2\n");
+    }    
     printf("\nPath atual depois da criação do abra2 dentro do dir1 estando na raiz: %s\n", currentPath.absolute);
     printf("\n**Indo para o direito 'abra'\n");
-    changeDir("./abra");
+    if(changeDir("./abra") == -1){//esse diretorio n existe mais
+        printf("\nError change ./abra\n");
+    }
     printf("Path atual: %s\n", currentPath.absolute);
     printf("\n**Indo para o direito ' '\n");
-    changeDir(" ");
+    if(changeDir(" ") == -1){//piccoli falou q tem q retornar erro mesmo
+        printf("\nError change " """\n");
+    }
     printf("Path atual: %s\n", currentPath.absolute);
 
     printf("\n**Indo para o direito '..dir1/ '\n");
-    changeDir("../dir1");
+    if(changeDir("../dir1") == -1){
+        printf("\nError change ../dir1\n");
+    }
     printf("Path atual: %s\n", currentPath.absolute);
     printf("\n***Folders do DIR1:\n");
     printFolders(currentPath.clusterNo);
     printf("\n**Indo para o diretorio 'abra2'\n");
-    changeDir("abra2");
+    if(changeDir("abra2") == -1){
+        printf("\nError change abra2\n");
+    }
     printFolders(currentPath.clusterNo);
 
     printf("Path atual: %s\n", currentPath.absolute);
+    if(changeDir(".") == -1){
+        printf("\nError change .\n");
+    }
     printf("\n\n**Indo para o direito '.'\n");
     printf("Path atual: %s\n", currentPath.absolute);
 
     printf("\n**Indo para o direito '..' -> voltar um\n");
-    changeDir("..");
+    if(changeDir("..") == -1){
+        printf("\nError change ..\n");
+    }
     printf("Path atual: %s\n", currentPath.absolute);
 
     printf("\n**Indo para o direito '/' -> raiz\n");
-    changeDir("/");
+    if(changeDir("/") == -1){
+        printf("\nError change /\n");
+    }
     printf("Path atual: %s\n", currentPath.absolute);
 
     printf("\n**Deletando o abra2, que está dentro do dir1 apartir da raiz:\n");
-    deleteDir("../dir1/abra2");
+    if(deleteDir("../dir1/abra2") == -1){
+        printf("Error na deleção");
+    }
     printf("Path atual depois da delecao: %s\n", currentPath.absolute);
     printf("Indo para o direito dir1\n");
     changeDir("../dir1");
+    if(changeDir("../dir1") == -1){
+        printf("\nError change ../dir1\n");
+    }
     printf("Path atual: %s\n", currentPath.absolute);
     printf("***Folders do DIR1:\n");    
     printFolders(currentPath.clusterNo);
 
-    
+
 //Teste da função getcwd2
     char * currentPathTest = malloc(15);
     

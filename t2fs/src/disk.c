@@ -803,3 +803,63 @@ int closeDir(DIR2 handle){
     return -1;
 
 }
+
+int link(char * path, char ** output) {
+    int i;
+    int isLink = 0;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    char * absolute;
+    char * pathToFile;
+    char * fileName;
+    int pathClusterNo;
+    int linkClusterNo;
+    toAbsolutePath(path, currentPath.absolute, &absolute);
+    //printf("\nAboslute: %s", absolute);
+    separatePath(absolute, &pathToFile, &fileName);
+    
+    pathClusterNo = pathToCluster(pathToFile);
+
+    if(pathClusterNo == -1) {
+        free(buffer);
+        free(absolute);
+        free(fileName);
+        free(pathToFile);
+        return -1;
+    }
+
+    readCluster(pathClusterNo, buffer);
+
+    // printf("\nfileName: %s", fileName);
+    for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
+        // printf("\nNumero de vezes do for %d\n", i);
+        if ( (strcmp((char *)buffer+i+1, fileName) == 0) && (((BYTE) buffer[i]) == TYPEVAL_LINK) && !isLink ) {
+            isLink = 1;
+        } 
+    }
+
+    if(!isLink) {
+        free(buffer);
+        free(absolute);
+        free(fileName);
+        free(pathToFile);
+        *output = malloc(sizeof(char)*(strlen(path)+1));
+        strcpy(*output,path);
+        return 0;
+    }
+    
+    linkClusterNo = pathToCluster(path);
+
+    memset(buffer,0,clusterByteSize);
+
+    readCluster(linkClusterNo,buffer);
+
+    *output = malloc(sizeof(char)*(strlen((char*)buffer)+1));
+    strcpy(*output,(char*)buffer);
+
+    free(buffer);
+    free(absolute);
+    free(fileName);
+    free(pathToFile);
+    return 0;
+}
