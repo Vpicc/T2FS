@@ -695,6 +695,7 @@ int isInCluster(int clusterNo, char * fileName, BYTE TypeValEntrada) {
     free(buffer);
     return 0;
 }
+
 int isRightName(char * name){
     if(strcmp(name, ".") == 0){
         return 0;
