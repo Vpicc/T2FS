@@ -8,7 +8,7 @@
 int disk_initialized = 0;
 
 //aa
-DISK_FILE openFiles[10];
+
 DISK_DIR openDirectories[10];
 
 DWORD convertToDword(unsigned char* buffer) {
@@ -225,7 +225,7 @@ int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
 
     readCluster(clusterNo, newBuffer);
 
-    for(j = position; j < size - 1 + position; j++){
+    for(j = position; j < size + position; j++){
         newBuffer[j] = buffer[j - position];
     }
 
@@ -1050,6 +1050,7 @@ int truncateFile(FILE2 handle) {
             fileNo = i;
             found = 1;
         }
+        i += 1;
     }
 
     if(!found) {
@@ -1058,30 +1059,32 @@ int truncateFile(FILE2 handle) {
 
     currentPointerInCluster = openFiles[fileNo].currPointer;
     nextCluster = openFiles[fileNo].clusterNo;
+    currentCluster = nextCluster;
 	
     while(currentPointerInCluster >= SECTOR_SIZE*superBlock.SectorsPerCluster) {
         if(readInFAT(nextCluster,&value) != 0) {
             return -1;
         }
+        nextCluster = (int)value;
         if((DWORD)nextCluster != END_OF_FILE) {
             currentCluster = nextCluster;
         }
-        nextCluster = (int)value;
         currentPointerInCluster -= SECTOR_SIZE*superBlock.SectorsPerCluster;
         
     }
 
-    truncateCluster(currentCluster,openFiles[fileNo].currPointer);
+    truncateCluster(currentCluster,currentPointerInCluster);
+
 
     while((DWORD)nextCluster != END_OF_FILE) {
         if(readInFAT(nextCluster,&value) != 0) {
             return -1;
         }
+        nextCluster = (int)value;
         if((DWORD)nextCluster != END_OF_FILE) {
             currentCluster = nextCluster;
+            truncateCluster(currentCluster,0);
         }
-        truncateCluster(currentCluster,0);
-        nextCluster = (int)value;
     }
 
     return 0;

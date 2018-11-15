@@ -105,4 +105,6 @@ typedef struct diskd {
     DIRENT2 directory;
 } DISK_DIR;
 
+DISK_FILE openFiles[10];
+
 #endif
