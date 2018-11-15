@@ -825,66 +825,6 @@ int closeDir(DIR2 handle){
 
 }
 
-int link(char * path, char ** output) {
-    int i;
-    int isLink = 0;
-    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
-    unsigned char* buffer = malloc(clusterByteSize);
-    char * absolute;
-    char * pathToFile;
-    char * fileName;
-    int pathClusterNo;
-    int linkClusterNo;
-    toAbsolutePath(path, currentPath.absolute, &absolute);
-    //printf("\nAboslute: %s", absolute);
-    separatePath(absolute, &pathToFile, &fileName);
-    
-    pathClusterNo = pathToCluster(pathToFile);
-
-    if(pathClusterNo == -1) {
-        free(buffer);
-        free(absolute);
-        free(fileName);
-        free(pathToFile);
-        return -1;
-    }
-
-    readCluster(pathClusterNo, buffer);
-
-    // printf("\nfileName: %s", fileName);
-    for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
-        // printf("\nNumero de vezes do for %d\n", i);
-        if ( (strcmp((char *)buffer+i+1, fileName) == 0) && (((BYTE) buffer[i]) == TYPEVAL_LINK) && !isLink ) {
-            isLink = 1;
-        } 
-    }
-
-    if(!isLink) {
-        free(buffer);
-        free(absolute);
-        free(fileName);
-        free(pathToFile);
-        *output = malloc(sizeof(char)*(strlen(path)+1));
-        strcpy(*output,path);
-        return 0;
-    }
-    
-    linkClusterNo = pathToCluster(path);
-
-    memset(buffer,0,clusterByteSize);
-
-    readCluster(linkClusterNo,buffer);
-
-    *output = malloc(sizeof(char)*(strlen((char*)buffer)+1));
-    strcpy(*output,(char*)buffer);
-
-    free(buffer);
-    free(absolute);
-    free(fileName);
-    free(pathToFile);
-    return 0;
-}
-
 FILE2 createFile(char * filename){
     char * absolute;
     char * firstOut;
@@ -1031,4 +971,116 @@ void printOpenFiles(){
             printf("CurrPointer: %d\n", openFiles[i].currPointer);
         }
     }
+}
+
+int link(char * path, char ** output) {
+    int i;
+    int isLink = 0;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    char * absolute;
+    char * pathToFile;
+    char * fileName;
+    int pathClusterNo;
+    int linkClusterNo;
+    toAbsolutePath(path, currentPath.absolute, &absolute);
+    //printf("\nAboslute: %s", absolute);
+    separatePath(absolute, &pathToFile, &fileName);
+    
+    pathClusterNo = pathToCluster(pathToFile);
+
+    if(pathClusterNo == -1) {
+        free(buffer);
+        free(absolute);
+        free(fileName);
+        free(pathToFile);
+        return -1;
+    }
+
+    readCluster(pathClusterNo, buffer);
+
+    // printf("\nfileName: %s", fileName);
+    for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
+        // printf("\nNumero de vezes do for %d\n", i);
+        if ( (strcmp((char *)buffer+i+1, fileName) == 0) && (((BYTE) buffer[i]) == TYPEVAL_LINK) && !isLink ) {
+            isLink = 1;
+        } 
+    }
+
+    if(!isLink) {
+        free(buffer);
+        free(absolute);
+        free(fileName);
+        free(pathToFile);
+        *output = malloc(sizeof(char)*(strlen(path)+1));
+        strcpy(*output,path);
+        return 0;
+    }
+    
+    linkClusterNo = pathToCluster(path);
+
+    memset(buffer,0,clusterByteSize);
+
+    readCluster(linkClusterNo,buffer);
+
+    *output = malloc(sizeof(char)*(strlen((char*)buffer)+1));
+    strcpy(*output,(char*)buffer);
+
+    free(buffer);
+    free(absolute);
+    free(fileName);
+    free(pathToFile);
+    return 0;
+}
+
+// WORK IN PROGRESS
+int truncateFile(FILE2 handle) {
+    int i = 0;
+    int fileNo;
+    int found = 0;
+    int currentPointerInCluster;
+    int currentCluster;
+    int nextCluster;
+    DWORD value;
+
+    while(i < MAX_NUM_FILES && !found){
+        if (handle == openFiles[i].file) {
+            fileNo = i;
+            found = 1;
+        }
+    }
+
+    if(!found) {
+        return -1;
+    }
+
+    currentPointerInCluster = openFiles[fileNo].currPointer;
+    nextCluster = openFiles[fileNo].clusterNo;
+	
+    while(currentPointerInCluster >= SECTOR_SIZE*superBlock.SectorsPerCluster) {
+        if(readInFAT(nextCluster,&value) != 0) {
+            return -1;
+        }
+        if((DWORD)nextCluster != END_OF_FILE) {
+            currentCluster = nextCluster;
+        }
+        nextCluster = (int)value;
+        currentPointerInCluster -= SECTOR_SIZE*superBlock.SectorsPerCluster;
+        
+    }
+
+    truncateCluster(currentCluster,openFiles[fileNo].currPointer);
+
+    while((DWORD)nextCluster != END_OF_FILE) {
+        if(readInFAT(nextCluster,&value) != 0) {
+            return -1;
+        }
+        if((DWORD)nextCluster != END_OF_FILE) {
+            currentCluster = nextCluster;
+        }
+        truncateCluster(currentCluster,0);
+        nextCluster = (int)value;
+    }
+
+    return 0;
 }
