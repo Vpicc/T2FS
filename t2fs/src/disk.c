@@ -501,7 +501,6 @@ int mkdir(char * path){
         }
 
     if(isInCluster(clusterDotDot, secondOut, TYPEVAL_DIRETORIO)){
-        printf("\nEste nome ja existe\n");
         free(absolute);
         free(firstOut);
         free(secondOut);
@@ -594,22 +593,18 @@ int deleteDir(char * path){
             return -1;
         }
         clusterDirFather = currentPath.clusterNo;
-        //printf("\n**ENTREI EMPTY**\n");
         int i;
         int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
         struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
         folderContent = readDataClusterFolder(currentPath.clusterNo);
         for(i = 0; i < folderSize; i++) {
             if(strcmp(folderContent[i].name, secondOut) == 0){
-                    //printf("\n**ENTREI IF**\n");
                     folderContent[i].TypeVal = TYPEVAL_INVALIDO;
                     strcpy(folderContent[i].name, "\0");
                     folderContent[i].bytesFileSize = 0;
                     folderContent[i].clustersFileSize = 0;
                     folderContent[i].firstCluster = 0;
                     writeInFAT(clusterDir, 0);
-                    //writeDataClusterFolder(firstClusterFreeInFAT, folderContent[i]);
-                    //int writeCluster(clusterDirErased, unsigned char* buffer, int position, int size)
                     writeZeroClusterFolderByName(clusterDirFather, folderContent[i], secondOut, TYPEVAL_DIRETORIO);
                     writeZeroClusterFolderByName(clusterDir,folderContent[i],".",TYPEVAL_DIRETORIO);
                     writeZeroClusterFolderByName(clusterDir,folderContent[i],"..",TYPEVAL_DIRETORIO);                    
@@ -630,7 +625,6 @@ int deleteDir(char * path){
 }
 
 int writeZeroClusterFolderByName(int clusterNo, struct t2fs_record folder, char * fileName, BYTE TypeValEntrada) {
-    //printf("\n**ENTREI write**\n");
     int i;
     int k = 0;
     int written = 0;
@@ -641,12 +635,8 @@ int writeZeroClusterFolderByName(int clusterNo, struct t2fs_record folder, char 
     
     if (sector >= superBlock.DataSectorStart && sector < superBlock.NofSectors) {
         readCluster(clusterNo, buffer);
-
-       // printf("\nfileName: %s", fileName);
         for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
-           // printf("\nNumero de vezes do for %d\n", i);
             if ( (strcmp((char *)buffer+i+1, fileName) == 0) && (((BYTE) buffer[i]) == TypeValEntrada) && !written ) {
-                //printf("\nEntrou aqui no STRCMP\nCluster = %d", clusterNo);
                 memcpy(buffer + i,&(folder.TypeVal),1);
                 memcpy((buffer + i + 1),folder.name,51);
                 memcpy((buffer + i + 52),dwordToLtlEnd(folder.bytesFileSize),4);
