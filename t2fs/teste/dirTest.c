@@ -219,8 +219,13 @@ printf("\n\n*******TESTE PARA A CREATEFILE");
     if(changeDir("./dir1") == -1){
         printf("\nERRROR 3\n");
     }
+
     printf("\nFOLDERS DO DIREOTIRO DIR1, ONDE FOI CRIADO OS ARQUIVOS");
     printFolders(currentPath.clusterNo);
+    deleteFile("./file15.txt");
+    printf("\nFOLDERS DO DIREOTIRO DIR1, ONDE FOI CRIADO OS ARQUIVOS e deletado o 15");
+    printFolders(currentPath.clusterNo);
+
     printf("\nPRINT DA FAT\n");
     printFAT(0);
     printf("\nPRINT DOS ARQUIVOS ABERTOS\n");
