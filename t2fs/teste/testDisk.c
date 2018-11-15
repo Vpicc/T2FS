@@ -6,6 +6,7 @@
 #include "../include/t2fs.h"
 
 //gcc -o testeDisk testDisk.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeDisk
+//gcc -m32 -o testeDisk testDisk.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeDisk
 
 void printFAT(int sector) {
     int j;
