@@ -738,13 +738,11 @@ DIRENT2 setNullDirent()
 DIRENT2 searchDirByHandle(DIR2 handle){
 
     int i;
-    int found=-1;
     struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
     int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
 
-    for(i=0;i<10 && found==-1;i++){
+    for(i=0;i<10;i++){
         if(openDirectories[i].handle==handle){
-            found=0;
  
             if(changeDir(openDirectories[i].path.absolute) == -1){
                 return setNullDirent();
@@ -768,34 +766,29 @@ void setCurrentPathToRoot(){
 }
 
 DIR2 openDir(char *path){
-    int i=0;
-    int foundOpenDirectory=-1;
-    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
-
-    setCurrentPathToRoot();
-
-    if(changeDir(path)==-1)
+    int i;
+    char *absolute;
+    if(strcmp(path,"/") != 0){
+    if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
         return -1;
-    
-    folderContent= readDataClusterFolder(currentPath.clusterNo);
-    if(folderContent[0].TypeVal != TYPEVAL_DIRETORIO){
-        return -2;
     }
-    while(foundOpenDirectory == -1 && i<10){
+    for(i=0;i<10;i++){
         if(openDirectories[i].handle == -1){
             openDirectories[i].handle = i;
-            openDirectories[i].directory.fileSize=folderContent[i].bytesFileSize;
-            openDirectories[i].directory.fileType=folderContent[i].TypeVal;
-            strcpy(openDirectories[i].path.absolute,currentPath.absolute);
-            openDirectories[i].path.clusterNo=currentPath.clusterNo;
-            strcpy(openDirectories[i].directory.name,folderContent[i].name);
-            foundOpenDirectory=0;
+            if(strcmp(absolute,"/") == 0 || strcmp(path,"/") ==0 ){
+            openDirectories[i].path.clusterNo=superBlock.RootDirCluster;
+            strcpy(openDirectories[i].path.absolute,"/");
+            }
+            else{
+                openDirectories[i].path.clusterNo=pathToCluster(absolute);
+                strcpy(openDirectories[i].path.absolute,absolute);
+           }
             return openDirectories[i].handle;
         }
-        i++;
     }
-    return -3;
+    return -1;
 }
+
 
 void printOpenDirectories(){
     int i;
@@ -1085,4 +1078,125 @@ int truncateFile(FILE2 handle) {
     }
 
     return 0;
+}
+
+int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
+
+    char * absolutefilename = malloc(sizeof(char)*2);
+    char * absolute;
+    char * firstOut;
+    char * secondOut;
+    int firstClusterFreeInFAT;
+    int clusterFile;
+    int clusterDotDot;
+    char *buffer = malloc(sizeof(char)*10);
+    char *clusterFileHelper;
+
+
+    if(strcmp(filename,"/") ==0)
+        strcpy(absolutefilename,"/");
+    else
+        toAbsolutePath(filename, currentPath.absolute, &absolutefilename);
+
+
+    clusterFileHelper= malloc(sizeof(char)*(strlen(absolutefilename)+2));
+            
+            
+    strcpy(clusterFileHelper,absolutefilename);
+
+    if(absolutefilename[strlen(absolutefilename)-1]!='/' ){
+        strcat(clusterFileHelper,"/");
+    }
+    toAbsolutePath(linkname, currentPath.absolute, &absolute);
+    separatePath(absolute, &firstOut, &secondOut);
+
+    if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){//se n achar um cluster livre na fat
+        free(absolute);
+        free(absolutefilename);
+        free(firstOut);
+        free(secondOut);
+        free(buffer);
+        free(clusterFileHelper);
+        return -1;
+    }
+        if(strlen(secondOut) == 0){//softlink sem nome
+        free(absolute);
+        free(absolutefilename);
+        free(firstOut);
+        free(secondOut);
+        free(buffer);
+        free(clusterFileHelper);
+        return -1;
+    }
+    if(!(isRightName(secondOut))){//softlink n pode ter esse nome
+
+        free(absolute);
+        free(clusterFileHelper);
+        free(absolutefilename);
+        free(firstOut);
+        free(secondOut);
+        free(buffer);
+        return -1;
+    }
+
+    //se o absolute do filename for / entao ele aponta para o root
+    if(strcmp(absolutefilename,"/") == 0){
+        clusterFile = superBlock.RootDirCluster;
+    }
+    else//se nao for, então tem q achar onde fica
+    {
+        clusterFile = pathToCluster(clusterFileHelper);
+        if(clusterFile == -1){
+        free(absolute);
+        free(absolutefilename);
+        free(firstOut);
+        free(secondOut);
+        free(clusterFileHelper);
+        free(buffer); 
+        return -1;
+    }
+    }
+    //se o firstOut do absolute for '/', então DotDot vai ser o raiz
+    if(strlen(firstOut) == 1 && firstOut[0]== '/'){
+        clusterDotDot = superBlock.RootDirCluster;
+    }
+    else//se nao for, então tem q achar onde fica
+    {
+
+        clusterDotDot = pathToCluster(firstOut);
+
+        if(clusterDotDot == -1){
+        free(absolute);
+        free(absolutefilename);
+        free(firstOut);
+        free(secondOut);
+        free(clusterFileHelper);
+        free(buffer);
+        return -1;
+    }
+    }
+    fprintf(stderr,"CLUSTER PARA ONDE O SOFTLINK APONTA: %d\n\n", clusterFile);
+    fprintf(stderr,"CLUSTER DO SOFTLINK CRIADO: %d\n\n", firstClusterFreeInFAT);
+    fprintf(stderr,"CLUSTER DA PASTA DO SOFTLINK: %d\n\n", clusterDotDot);
+    fprintf(stderr, "ABSOLUTE FILENAME: %s\n\n", absolutefilename);
+
+    struct t2fs_record link;
+
+    link.TypeVal = TYPEVAL_LINK;
+    strcpy(link.name, secondOut);
+    link.bytesFileSize = sizeof(char)*strlen(absolutefilename);
+    link.clustersFileSize = 1;
+    link.firstCluster = firstClusterFreeInFAT;
+    writeDataClusterFolder(clusterDotDot, link);
+    sprintf(buffer,"%d",clusterFile);
+    writeCluster(firstClusterFreeInFAT,(unsigned char *)absolutefilename,0,link.bytesFileSize);
+    writeInFAT(firstClusterFreeInFAT, convertToDword((unsigned char*)buffer));
+    free(absolute);
+    free(absolutefilename);
+    free(firstOut);
+    free(clusterFileHelper);
+    free(secondOut);
+    free(buffer);
+
+return 0;
 }

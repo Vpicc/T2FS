@@ -82,6 +82,8 @@ int makeAnewHandle();
 
 void printOpenFiles();
 
+int createSoftlink(char *linkname,char *filename);
+
 FILE2 openFile (char * filename);
 
 
