@@ -213,7 +213,6 @@ unsigned char* readDataCluster (int clusterNo){
 }
 
 int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
-    int i;
     int j;
     int k = 0;
     unsigned int sectorToWrite;
@@ -230,7 +229,24 @@ int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
         newBuffer[j] = buffer[j - position];
     }
 
-    for(i = position + size; i < SECTOR_SIZE*superBlock.SectorsPerCluster; i++){
+    for(sectorToWrite = sector; sectorToWrite < (sector + superBlock.SectorsPerCluster); sectorToWrite++) {
+        write_sector(sectorToWrite, newBuffer + k);
+        k += 256;
+    }
+    free(newBuffer);
+    return position + size;
+}
+
+int truncateCluster(int clusterNo, int position) {
+    int i;
+    int k = 0;
+    unsigned int sectorToWrite;
+    unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
+    unsigned char* newBuffer = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
+
+    readCluster(clusterNo, newBuffer);
+
+    for(i = position; i < SECTOR_SIZE*superBlock.SectorsPerCluster; i++){
         newBuffer[i] = '\0';
     }
     for(sectorToWrite = sector; sectorToWrite < (sector + superBlock.SectorsPerCluster); sectorToWrite++) {
@@ -238,7 +254,7 @@ int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
         k += 256;
     }
     free(newBuffer);
-    return position + size;
+    return 0;
 }
 
 int pathToCluster(char* path) {
@@ -259,6 +275,10 @@ int pathToCluster(char* path) {
         currentCluster = superBlock.RootDirCluster;
     }else {
         currentCluster = currentPath.clusterNo;
+    }
+
+    if (strcmp(pathcpy,"/") == 0) {
+        return superBlock.RootDirCluster;
     }
 
     pathTok = strtok(pathcpy,"/");
@@ -861,5 +881,57 @@ int link(char * path, char ** output) {
     free(absolute);
     free(fileName);
     free(pathToFile);
+    return 0;
+}
+
+// WORK IN PROGRESS
+int truncateFile(FILE2 handle) {
+    int i = 0;
+    int fileNo;
+    int found = 0;
+    int currentPointerInCluster;
+    int currentCluster;
+    int nextCluster;
+    DWORD value;
+
+    while(i < MAX_NUM_FILES && !found){
+        if (handle == openFiles[i].file) {
+            fileNo = i;
+            found = 1;
+        }
+    }
+
+    if(!found) {
+        return -1;
+    }
+
+    currentPointerInCluster = openFiles[fileNo].currPointer;
+    nextCluster = openFiles[fileNo].clusterNo;
+	
+    while(currentPointerInCluster >= SECTOR_SIZE*superBlock.SectorsPerCluster) {
+        if(readInFAT(nextCluster,&value) != 0) {
+            return -1;
+        }
+        if((DWORD)nextCluster != END_OF_FILE) {
+            currentCluster = nextCluster;
+        }
+        nextCluster = (int)value;
+        currentPointerInCluster -= SECTOR_SIZE*superBlock.SectorsPerCluster;
+        
+    }
+
+    truncateCluster(currentCluster,openFiles[fileNo].currPointer);
+
+    while((DWORD)nextCluster != END_OF_FILE) {
+        if(readInFAT(nextCluster,&value) != 0) {
+            return -1;
+        }
+        if((DWORD)nextCluster != END_OF_FILE) {
+            currentCluster = nextCluster;
+        }
+        truncateCluster(currentCluster,0);
+        nextCluster = (int)value;
+    }
+
     return 0;
 }
