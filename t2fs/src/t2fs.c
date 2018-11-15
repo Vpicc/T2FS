@@ -38,7 +38,7 @@ Sa�da:	Se a operacao foi realizada com sucesso, a funcao retorna o handle do a
 	Em caso de erro, deve ser retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 FILE2 create2 (char *filename) {
-    return -1;
+	return -1;
 }
 
 
