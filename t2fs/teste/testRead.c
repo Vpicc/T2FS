@@ -63,7 +63,7 @@ char *buffer=malloc(sizeof(char)*100);
 DIR2 openD;
 DIRENT2 direntry;
 int i;
-
+int saida;
 init_disk();
 
 openD=openDir("/");
@@ -79,13 +79,15 @@ for(i=0;i<5;i++){
 openFile1=open2("/file1.txt");
 
     fprintf(stderr,"LENDO ARQUIVO /file1.txt com o handle %d\n\n", openFile1);
-    fprintf(stderr,"Retorno do read:%d\n\n",read2(openFile,buffer,99));
+    saida=read2(openFile1,buffer,99);
+    fprintf(stderr,"Retorno do read:%d\n\n",saida);
     fprintf(stderr,"%s\n",buffer);
 
     openFile2=open2("/file2.txt");
 
-    fprintf(stderr,"LENDO ARQUIVO /file2.txt");
-    fprintf(stderr,"Retorno do read:%d\n\n",read2(openFile,buffer,99));
+    fprintf(stderr,"LENDO ARQUIVO /file2.txt com o handle %d\n\n", openFile2);
+    saida=read2(openFile2,buffer,99);
+    fprintf(stderr,"Retorno do read:%d\n\n",read2(openFile2,buffer,99));
     fprintf(stderr,"%s\n",buffer);
 
 

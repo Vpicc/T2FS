@@ -1105,14 +1105,15 @@ int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
     DWORD value;
     int j;
     int i=0;
-    unsigned char *prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
-    int endOfFile=-1;
+    int clusterCount=0;
+    unsigned char *prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster+1);
+
 
     //procura o arquivo pelo handle - nao consegue achar
     for(j=0;j<MAX_NUM_FILES && found==0;j++){
         if(openFiles[j].file == handle){
             found=1;
-            fileNo=i;
+            fileNo=j;
         }
 
     }
@@ -1120,37 +1121,46 @@ int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
         fprintf(stderr,"\n\nNao achou o handle\n\n");
         return -1;
     }
+
     currentPointerInCluster = openFiles[fileNo].currPointer;
     currentCluster = openFiles[fileNo].clusterNo;
-    prebuffer=readDataCluster(currentCluster);
-    do{
-
-        if(i>=(currentPointerInCluster - SECTOR_SIZE*superBlock.SectorsPerCluster -1) && i<size){
-            if(readInFAT(nextCluster,&value) != 0) {
+    if(readInFAT(currentCluster,&value) != 0) {
             return -1;
-        }else{
-            nextCluster = (int)value;
-            prebuffer=readDataCluster(nextCluster);
-        }
-        if((DWORD)nextCluster == END_OF_FILE) {
-            endOfFile=0;
-        }
-        }
-        while(prebuffer[i]!=0 && prebuffer[i]!='\0' && i<(currentPointerInCluster - SECTOR_SIZE*superBlock.SectorsPerCluster) && i<size){
+            }else{
+                nextCluster=(int)value;
+            }
+            
+    //le o cluster atual
+    prebuffer=readDataCluster(currentCluster);
 
-            buffer[i]=(unsigned char)prebuffer[i];
-            // fprintf(stderr,"\n%d - %d:%c",i,prebuffer[i],buffer[i]);
+    while((DWORD)currentCluster != END_OF_FILE && i<size){
+
+        //percorre o buffer até achar o final do arquivo ou do cluster, transferindo os dados para saida
+        while(prebuffer[i-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && currentPointerInCluster < SECTOR_SIZE*superBlock.SectorsPerCluster && i<size){
+            buffer[i]=(unsigned char)prebuffer[i-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster];
+            //fprintf(stderr,"\n%d - %d:%c",i,prebuffer[i],buffer[i]);
             currentPointerInCluster++;
             i++;
         }
         if(i>=size)
             return -1;
-        
-        if((DWORD)currentCluster == END_OF_FILE) {
-            endOfFile=0;
-        }
 
-    }while(endOfFile != 0 && prebuffer[i]!=0 && prebuffer[i]!='\0' && i<size);
+    //se ainda nao preencheu o tamanho descrito
+        if(i<size || i>=clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster){
+            if(readInFAT(currentCluster,&value) != 0) {
+                return -1;
+            }else{
+                    nextCluster = (int)value;
+                    free(prebuffer);
+                    prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster+1);
+                    prebuffer=readDataCluster(nextCluster);
+                    currentPointerInCluster=0;
+                    currentCluster = nextCluster;
+            }
+            }
+                clusterCount++;
+        }
+    
 
     openFiles[fileNo].currPointer +=i;
     return i;
