@@ -225,7 +225,7 @@ int writeCluster(int clusterNo, unsigned char* buffer, int position, int size) {
 
     readCluster(clusterNo, newBuffer);
 
-    for(j = position; j < size + position; j++){
+    for(j = position; j < size - 1 + position; j++){
         newBuffer[j] = buffer[j - position];
     }
 
