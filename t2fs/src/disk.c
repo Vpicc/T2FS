@@ -590,7 +590,7 @@ int deleteDir(char * path){
     char * auxCurrentPath = malloc (sizeof((strlen(currentPath.absolute))));//guarda onde estava
     unsigned int clusterDirFather;
     unsigned int clusterDir;
-    int sucess;
+    int sucess = 0;
 
     strcpy(auxCurrentPath,currentPath.absolute);
 
@@ -621,7 +621,7 @@ int deleteDir(char * path){
         struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
         folderContent = readDataClusterFolder(currentPath.clusterNo);
         for(i = 0; i < folderSize; i++) {
-            if(strcmp(folderContent[i].name, secondOut) == 0){
+            if((strcmp(folderContent[i].name, secondOut) == 0) && (folderContent[i].TypeVal == TYPEVAL_DIRETORIO)){
                     folderContent[i].TypeVal = TYPEVAL_INVALIDO;
                     strcpy(folderContent[i].name, "\0");
                     folderContent[i].bytesFileSize = 0;
@@ -646,7 +646,7 @@ int deleteDir(char * path){
     changeDir(auxCurrentPath);
     return -1;
 }
-
+//O fileName n pode ser path
 int writeZeroClusterFolderByName(int clusterNo, struct t2fs_record folder, char * fileName, BYTE TypeValEntrada) {
     int i;
     int k = 0;
@@ -961,6 +961,93 @@ FILE2 openFile (char * filename){
     memcpy(&openFiles[handle-1], &newFileToRecord, sizeof(struct diskf));
     
     return newFileToRecord.file;
+}
+
+int closeFile(FILE2 handle){
+    int i;
+    for(i = 0; i < MAX_NUM_FILES; i++){
+        if(openFiles[i].file == handle){//então tava aberto
+            openFiles[i].file = -1;
+            openFiles[i].clusterNo = -1;
+            openFiles[i].currPointer = -1;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+int deleteFile(char * filename){
+    char * absolute;
+    char * firstOut;
+    char * secondOut;
+    int clusterOfDir;//cluster que contem o diretorio que contem o arquivo
+    int clusterToDelete;//cluster que tem q apagar
+    unsigned char* bufferWithNulls = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
+    DWORD FATrepresentation = 0;
+
+    memset(bufferWithNulls,'\0',SECTOR_SIZE*superBlock.SectorsPerCluster);// coloca /0 em todo o buffer
+
+    if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
+        printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        return -1;
+    }
+
+    if(separatePath(absolute, &firstOut, &secondOut)){
+        printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        return -1;
+    }
+
+    if((clusterOfDir = pathToCluster(firstOut)) == -1){
+        return -1;
+    }
+
+    if((clusterToDelete = pathToCluster(absolute))== -1){
+        return -1;
+    }
+
+    struct t2fs_record folderContent;
+
+    folderContent.TypeVal = TYPEVAL_INVALIDO;
+    strcpy(folderContent.name, "\0");
+    folderContent.bytesFileSize = 0;
+    folderContent.clustersFileSize = 0;
+    folderContent.firstCluster = 0;
+
+    if(writeZeroClusterFolderByName(clusterOfDir, folderContent, secondOut, TYPEVAL_REGULAR) == -1){
+        return -1;
+    }
+
+    closeFileByFristCluster(clusterToDelete);
+
+    while( FATrepresentation != END_OF_FILE ){
+
+        readInFAT(clusterToDelete,&FATrepresentation);//le o proximo cluster que tem conteudo do arquivo
+        writeInFAT(clusterToDelete, 0);//marca 0 naquela represetanção, pra libera-lá
+
+        //escreve o buffer cheio de nulls dentro daquele cluster q tinha o arquivo.
+        writeCluster(clusterToDelete,bufferWithNulls,0,SECTOR_SIZE*superBlock.SectorsPerCluster);
+
+        //atualiza o novo cluster
+        if(FATrepresentation != END_OF_FILE){
+            clusterToDelete = (int) FATrepresentation;
+        }
+
+    }
+
+    return 0;
+}
+
+int closeFileByFristCluster(int clusterToClose){
+    int i;
+    for(i = 0; i < MAX_NUM_FILES; i++){
+        if(openFiles[i].clusterNo == clusterToClose){//então tava aberto
+            openFiles[i].file = -1;
+            openFiles[i].clusterNo = -1;
+            openFiles[i].currPointer = -1;
+            return 0;
+        }
+    }
+    return -1;
 }
 
 void printOpenFiles(){
