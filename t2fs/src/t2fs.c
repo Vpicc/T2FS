@@ -38,7 +38,7 @@ Sa�da:	Se a operacao foi realizada com sucesso, a funcao retorna o handle do a
 	Em caso de erro, deve ser retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 FILE2 create2 (char *filename) {
-	return -1;
+	return createFile(filename);
 }
 
 
@@ -74,7 +74,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o han
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
 	
-    return -1;
+    return openFile(filename);
 }
 
 
@@ -88,7 +88,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int close2 (FILE2 handle) {
-    return -1;
+    return closeFile(handle);
 }
 
 

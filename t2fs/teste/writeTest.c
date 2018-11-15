@@ -5,6 +5,7 @@
 #include "../include/apidisk.h"
 #include "../include/t2fs.h"
 // gcc -o testeWrite writeTest.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeWrite
+// gcc -m32 -o testeWrite writeTest.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeWrite
 
 void printFAT(int sector) {
     int j;

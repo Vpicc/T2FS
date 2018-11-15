@@ -78,6 +78,8 @@ int truncateFile(FILE2 handle);
 
 FILE2 createFile(char * filename);
 
+int deleteFile(char * filename);
+
 int makeAnewHandle();
 
 void printOpenFiles();
@@ -86,6 +88,9 @@ FILE2 openFile (char * filename);
 
 int writeFile(FILE2 handle, char * buffer, int size);
 
+int closeFile(FILE2 handle);
+
+int closeFileByFristCluster(int clusterToClose);
 
 typedef struct diskf {
     FILE2 file;
