@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../include/t2fs.h"
+#include "../include/disk.h"
 
 
 /*-----------------------------------------------------------------------------
@@ -72,6 +73,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o han
 	Em caso de erro, deve ser retornado um valor negativo
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
+	
     return -1;
 }
 
@@ -140,6 +142,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int truncate2 (FILE2 handle) {
+	
     return -1;
 }
 
@@ -177,7 +180,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int mkdir2 (char *pathname) {
-    return -1;
+    return mkdir(pathname);
 }
 
 
@@ -198,7 +201,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int rmdir2 (char *pathname) {
-    return -1;
+    return deleteDir(pathname);
 }
 
 
@@ -216,7 +219,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 		Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
-    return -1;
+    return changeDir(pathname);
 }
 
 
@@ -236,7 +239,14 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 		Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int getcwd2 (char *pathname, int size) {
-    return -1;
+	if(strlen(currentPath.absolute) > size){
+		return -1;
+	}
+	else{
+		memset(pathname,'\0',strlen(pathname));
+		strcpy(pathname, currentPath.absolute);
+		return 0;
+	}
 }
 
 
@@ -255,7 +265,8 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o ide
 	Em caso de erro, ser� retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 DIR2 opendir2 (char *pathname) {
-    return -1;
+
+	return openDir(pathname);
 }
 
 
@@ -276,7 +287,14 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero ( e "dentry" n�o ser� v�lido)
 -----------------------------------------------------------------------------*/
 int readdir2 (DIR2 handle, DIRENT2 *dentry) {
-    return -1;
+
+	DIRENT2 diretoryentry;
+	diretoryentry=searchDirByHandle(handle);
+	*dentry=diretoryentry;
+	if(strcmp(diretoryentry.name,"")==0)
+		return -1;
+	
+	return 0;
 }
 
 
@@ -290,7 +308,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int closedir2 (DIR2 handle) {
-    return -1;
+    return closeDir(handle);
 }
 
 
