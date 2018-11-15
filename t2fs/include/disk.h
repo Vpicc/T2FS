@@ -86,6 +86,9 @@ int createSoftlink(char *linkname,char *filename);
 
 FILE2 openFile (char * filename);
 
+int readFile (FILE2 handle, char *buffer, int size);
+
+void printfopenfiles();
 
 typedef struct diskf {
     FILE2 file;

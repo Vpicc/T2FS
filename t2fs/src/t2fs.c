@@ -74,7 +74,7 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna o han
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
 	
-    return -1;
+    return openFile(filename);
 }
 
 
@@ -107,7 +107,7 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna o nï¿
 	Em caso de erro, serï¿½ retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 int read2 (FILE2 handle, char *buffer, int size) {
-    return -1;
+    return readFile(handle,buffer,size);
 }
 
 

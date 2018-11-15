@@ -767,8 +767,11 @@ void setCurrentPathToRoot(){
 
 DIR2 openDir(char *path){
     int i;
-    char *absolute;
-    if(strcmp(path,"/") != 0){
+    char *absolute=malloc(sizeof(char)*2);
+    if(strcmp(path,"/") == 0){
+        strcpy(absolute,"/");
+    }
+    else{
     if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
         return -1;
     }
@@ -935,10 +938,12 @@ FILE2 openFile (char * filename){
     firstClusterOfFile = pathToCluster(absolute);
 //caminho inexistente
     if(firstClusterOfFile == -1){
+        printf("caminho inexistente");
         return -1;
     }
 //n tinha espaço para adicionar um novo arquivos
     if(handle == -1){
+        printf("sem espaco");
         free(absolute);
         free(firstOut);
         free(secondOut);
@@ -1079,6 +1084,79 @@ int truncateFile(FILE2 handle) {
 
     return 0;
 }
+void printfopenfiles()
+{
+    fprintf(stderr,"entrei aqui");
+    int i;
+    for(i=0;i<MAX_NUM_FILES;i++){
+        if(openFiles[i].file!=-1)
+        {
+            printf("\nnhandle: %d\n",openFiles[i].file);
+        }
+    }
+}
+int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
+
+    int found=0;
+    int currentPointerInCluster;
+    int currentCluster;
+    int nextCluster;
+    int fileNo;
+    DWORD value;
+    int j;
+    int i=0;
+    unsigned char *prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
+    int endOfFile=-1;
+
+    //procura o arquivo pelo handle - nao consegue achar
+    for(j=0;j<MAX_NUM_FILES && found==0;j++){
+        if(openFiles[j].file == handle){
+            found=1;
+            fileNo=i;
+        }
+
+    }
+    if(found==0){
+        fprintf(stderr,"\n\nNao achou o handle\n\n");
+        return -1;
+    }
+    currentPointerInCluster = openFiles[fileNo].currPointer;
+    currentCluster = openFiles[fileNo].clusterNo;
+    prebuffer=readDataCluster(currentCluster);
+    do{
+
+        if(i>=(currentPointerInCluster - SECTOR_SIZE*superBlock.SectorsPerCluster -1) && i<size){
+            if(readInFAT(nextCluster,&value) != 0) {
+            return -1;
+        }else{
+            nextCluster = (int)value;
+            prebuffer=readDataCluster(nextCluster);
+        }
+        if((DWORD)nextCluster == END_OF_FILE) {
+            endOfFile=0;
+        }
+        }
+        while(prebuffer[i]!=0 && prebuffer[i]!='\0' && i<(currentPointerInCluster - SECTOR_SIZE*superBlock.SectorsPerCluster) && i<size){
+
+            buffer[i]=(unsigned char)prebuffer[i];
+            // fprintf(stderr,"\n%d - %d:%c",i,prebuffer[i],buffer[i]);
+            currentPointerInCluster++;
+            i++;
+        }
+        if(i>=size)
+            return -1;
+        
+        if((DWORD)currentCluster == END_OF_FILE) {
+            endOfFile=0;
+        }
+
+    }while(endOfFile != 0 && prebuffer[i]!=0 && prebuffer[i]!='\0' && i<size);
+
+    openFiles[fileNo].currPointer +=i;
+    return i;
+}
+
+
 
 int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
 

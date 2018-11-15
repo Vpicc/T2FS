@@ -142,7 +142,7 @@ int main(){
          fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para ROOT (cluster 11)\n\n");
         printDataCluster(11);
          fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para dir1 (cluster15)\n\n");
-        printDataCluster(15);
+        printDataCluster(1);
     printFAT(0);
     readInFAT(11, &value);
     printf("\nCLUSTER 11 NA FAT APONTA PARA CLUSTER 2 (32): %x\n\n",value);
