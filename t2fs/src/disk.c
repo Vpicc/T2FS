@@ -1573,7 +1573,8 @@ int moveCursor (FILE2 handle, DWORD offset){
     //fprintf(stderr,"%d", size);
     //novo cp
     newCursorPointer = currentPointer + (int)offset;
-    if(newCursorPointer > sizeOfFile(path)){
+
+    if(newCursorPointer > sizeOfFile(path) || newCursorPointer<0){
         return -2;
     }
     if((int)offset == -1){
