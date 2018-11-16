@@ -17,6 +17,7 @@ void printFAT(int sector) {
         printf("%x ",buffer[j]);
     }
     printf("\n");
+
 }
 
 void printDataSector(int clusterNo) {
@@ -61,6 +62,7 @@ int main(){
 FILE2 openFile1,openFile2;
 char *buffer=malloc(sizeof(char)*100);
 DIR2 openD;
+DWORD value;
 DIRENT2 direntry;
 int i;
 int saida;
@@ -89,7 +91,6 @@ openFile1=open2("/file1.txt");
     saida=read2(openFile2,buffer,99);
     fprintf(stderr,"Retorno do read:%d\n\n",read2(openFile2,buffer,99));
     fprintf(stderr,"%s\n",buffer);
-
 
 return 0;
 

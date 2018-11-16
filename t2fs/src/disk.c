@@ -1191,7 +1191,7 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
             
             
     strcpy(clusterFileHelper,absolutefilename);
-
+    //adiciono um "/" no final se nao tiver pra poder utilizar a funcao pathToCluster direto
     if(absolutefilename[strlen(absolutefilename)-1]!='/' ){
         strcat(clusterFileHelper,"/");
     }
@@ -1263,10 +1263,10 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
         return -1;
     }
     }
-    fprintf(stderr,"CLUSTER PARA ONDE O SOFTLINK APONTA: %d\n\n", clusterFile);
-    fprintf(stderr,"CLUSTER DO SOFTLINK CRIADO: %d\n\n", firstClusterFreeInFAT);
-    fprintf(stderr,"CLUSTER DA PASTA DO SOFTLINK: %d\n\n", clusterDotDot);
-    fprintf(stderr, "ABSOLUTE FILENAME: %s\n\n", absolutefilename);
+//    fprintf(stderr,"CLUSTER PARA ONDE O SOFTLINK APONTA: %d\n\n", clusterFile);
+  //  fprintf(stderr,"CLUSTER DO SOFTLINK CRIADO: %d\n\n", firstClusterFreeInFAT);
+    //fprintf(stderr,"CLUSTER DA PASTA DO SOFTLINK: %d\n\n", clusterDotDot);
+    //fprintf(stderr, "ABSOLUTE FILENAME: %s\n\n", absolutefilename);
 
     struct t2fs_record link;
 
@@ -1276,9 +1276,15 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
     link.clustersFileSize = 1;
     link.firstCluster = firstClusterFreeInFAT;
     writeDataClusterFolder(clusterDotDot, link);
-    sprintf(buffer,"%d",clusterFile);
+  //  sprintf(buffer,"%d",clusterFile);
     writeCluster(firstClusterFreeInFAT,(unsigned char *)absolutefilename,0,link.bytesFileSize);
-    writeInFAT(firstClusterFreeInFAT, convertToDword((unsigned char*)buffer));
+
+/*    DWORD conv;
+    fprintf(stderr,"\n\n%s\n\n",buffer);
+    conv=convertToDword((unsigned char*)buffer);
+        fprintf(stderr,"\n\n%x\n\n",(DWORD)clusterFile);
+*/
+    writeInFAT(firstClusterFreeInFAT, (DWORD)clusterFile);
     free(absolute);
     free(absolutefilename);
     free(firstOut);
