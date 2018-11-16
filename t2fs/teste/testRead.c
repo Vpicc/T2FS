@@ -93,10 +93,18 @@ openFile1=open2("/file1.txt");
 
     fprintf(stderr,"Retorno do read:%d\n\n",saida);
     printOpenFiles();
-    i = seek2(openFile1,(DWORD)-55);
+    i = seek2(openFile1,(DWORD)-10);
     if(i != 0){
         fprintf(stderr,"\nErro no seek: %d\n",i);
     }
+
+    printOpenFiles();
+    fprintf(stderr,"LENDO ARQUIVO /file1.txt com o handle %d\n\n", openFile1);
+    free(buffer);
+    buffer=malloc(sizeof(char)*2000);
+    saida=read2(openFile1,buffer,99);
+    fprintf(stderr,"Retorno do read de %d:%d\n\n",openFile1,saida);
+    fprintf(stderr,"%s\n",buffer);
 
     printOpenFiles();
 return 0;
