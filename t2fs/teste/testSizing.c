@@ -75,9 +75,9 @@ for(i=0;i<5;i++){
         fprintf(stderr,"First entry size: %x\n\n",direntry.fileSize);
     }
 }
-openFile1=open2("/file1.txt");
+openFile1=open2("/file2.txt");
 fprintf(stderr,"\n\nHANDLE: %d\n\n",openFile1);
-saida=updateFileSize(openFile1,(DWORD)1);
+saida=updateFileSize(openFile1,(DWORD)10);
 fprintf(stderr,"\n\nsaida update: %d\n\n",saida);
 
 openD=openDir("/");

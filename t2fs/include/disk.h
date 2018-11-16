@@ -106,7 +106,7 @@ typedef struct diskf {
     FILE2 file;
     int currPointer;
     int clusterNo;
-    char clusterDir;
+    int clusterDir;
 } DISK_FILE;
 
 typedef struct currp {
