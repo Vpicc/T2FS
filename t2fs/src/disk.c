@@ -243,7 +243,7 @@ int truncateCluster(int clusterNo, int position) {
     unsigned int sectorToWrite;
     unsigned int sector = superBlock.DataSectorStart + superBlock.SectorsPerCluster*clusterNo;
     unsigned char* newBuffer = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
-
+    
     readCluster(clusterNo, newBuffer);
 
     for(i = position; i < SECTOR_SIZE*superBlock.SectorsPerCluster; i++){
@@ -254,6 +254,7 @@ int truncateCluster(int clusterNo, int position) {
         k += 256;
     }
     free(newBuffer);
+
     return 0;
 }
 
@@ -1227,6 +1228,7 @@ int truncateFile(FILE2 handle) {
         if((DWORD)nextCluster != END_OF_FILE) {
             currentCluster = nextCluster;
             truncateCluster(currentCluster,0);
+            writeInFAT(currentCluster,(DWORD)0);
         }
     }
 
@@ -1380,7 +1382,7 @@ int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
 
         //percorre o buffer até achar o final do arquivo ou do cluster, transferindo os dados para saida
         while(prebuffer[i-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && prebuffer[currentPointerInCluster-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && currentPointerInCluster < SECTOR_SIZE*superBlock.SectorsPerCluster && i<size){
-            buffer[i]=(unsigned char)prebuffer[i-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster];
+            buffer[i]=(unsigned char)prebuffer[currentPointerInCluster-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster];
             //fprintf(stderr,"\n%d - %d:%c",i,prebuffer[i],buffer[i]);
             currentPointerInCluster++;
             i++;
