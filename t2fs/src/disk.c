@@ -65,8 +65,6 @@ int init_disk() {
             openFiles[i].file = -1;
             openFiles[i].currPointer = -1;
             openFiles[i].clusterNo = -1;
-            openFiles[i].path = malloc(sizeof(char)*3);
-            openFiles[i].path = "";
             openDirectories[i].handle = -1;
             openDirectories[i].noReads=0;
             openDirectories[i].path.absolute=malloc(sizeof(100));
@@ -958,17 +956,19 @@ FILE2 openFile (char * filename){
         free(secondOut);
         return -1; 
     }
+    struct diskf newFileToRecord;
    
-//atualização do openFiles
-    openFiles[handle-1].clusterNo = firstClusterOfFile;
-    openFiles[handle-1].currPointer = 0;
-    openFiles[handle-1].file = handle;
-    free(openFiles[handle-1].path);
-    openFiles[handle-1].path=malloc(sizeof(char)*(strlen(absolute)+1));
-    strcpy(openFiles[handle-1].path,absolute);
+    newFileToRecord.clusterNo = firstClusterOfFile;
+    newFileToRecord.currPointer = 0;
+    newFileToRecord.file = handle;
+    //adicionei essas linhas pois uso o path na hora de saber o tamanho do arquivo - SAMUEL
+    newFileToRecord.path=malloc(sizeof(absolute)+1);
+    strcpy(newFileToRecord.path,absolute);
 
+//atualização do openFiles
+    memcpy(&openFiles[handle-1], &newFileToRecord, sizeof(struct diskf));
     
-    return handle;
+    return newFileToRecord.file;
 }
 
 int closeFile(FILE2 handle){
