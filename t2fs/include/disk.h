@@ -88,12 +88,17 @@ FILE2 openFile (char * filename);
 
 int readFile (FILE2 handle, char *buffer, int size);
 
-void printfopenfiles();
+int moveCursor (FILE2 handle, DWORD offset);
+
+int sizeOfFile(char *path);
+
+void printfOpenFiles();
 
 typedef struct diskf {
     FILE2 file;
     int currPointer;
     int clusterNo;
+    char *path;
 } DISK_FILE;
 
 typedef struct currp {

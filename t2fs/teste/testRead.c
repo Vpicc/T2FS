@@ -60,7 +60,7 @@ void printFolders(int clusterNo) {
 int main(){
 
 FILE2 openFile1,openFile2;
-char *buffer=malloc(sizeof(char)*100);
+char *buffer=malloc(sizeof(char)*2000);
 DIR2 openD;
 DWORD value;
 DIRENT2 direntry;
@@ -88,10 +88,16 @@ openFile1=open2("/file1.txt");
     openFile2=open2("/file2.txt");
 
     fprintf(stderr,"LENDO ARQUIVO /file2.txt com o handle %d\n\n", openFile2);
-    saida=read2(openFile2,buffer,99);
-    fprintf(stderr,"Retorno do read:%d\n\n",read2(openFile2,buffer,99));
-    fprintf(stderr,"%s\n",buffer);
 
+
+    saida=read2(openFile1,buffer,99);
+    fprintf(stderr,"Retorno do read:%d\n\n",saida);
+    printOpenFiles();
+    i = seek2(openFile1,(DWORD)-1);
+    if(i != 0){
+        fprintf(stderr,"\nErro no seek: %d\n",i);
+    }
+    printOpenFiles();
 return 0;
 
 }

@@ -162,7 +162,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int seek2 (FILE2 handle, DWORD offset) {
-    return -1;
+    return moveCursor (handle, offset);
 }
 
 
