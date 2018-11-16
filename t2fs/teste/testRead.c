@@ -93,7 +93,7 @@ openFile1=open2("/file1.txt");
 
     fprintf(stderr,"Retorno do read:%d\n\n",saida);
     printOpenFiles();
-    i = seek2(openFile1,(DWORD)-10);
+    i = seek2(openFile1,(DWORD)-56);
     if(i != 0){
         fprintf(stderr,"\nErro no seek: %d\n",i);
     }
