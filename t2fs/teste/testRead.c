@@ -61,14 +61,26 @@ int main(){
 
 FILE2 openFile1,openFile2;
 char *buffer=malloc(sizeof(char)*2000);
-DIR2 openD;
+DIR2 openD,openD1;
 DIRENT2 direntry;
 int i;
 int saida;
-init_disk();
 
-openD=openDir("/");
-for(i=0;i<5;i++){
+fprintf(stderr,"RETURN do INIT:%d",init_disk());
+
+openD=opendir2("/");
+fprintf(stderr,"handle :%d",openD);
+printOpenDirectories();
+
+openD1=opendir2("/dir1");
+printOpenDirectories();
+closedir2(openD);
+printOpenDirectories();
+openD=opendir2("/dir1");
+printOpenDirectories();
+
+
+for(i=0;i<10;i++){
     if(readdir2(openD,&direntry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{

@@ -66,8 +66,8 @@ int init_disk() {
             openFiles[i].currPointer = -1;
             openFiles[i].clusterNo = -1;
             openDirectories[i].handle = -1;
-            openDirectories[i].noReads=0;
-            openDirectories[i].path.absolute=malloc(sizeof(100));
+            openDirectories[i].noReads=-1;
+            openDirectories[i].clusterDir= -1;
             openDirectories[i].directory=setNullDirent();
         }
 
@@ -744,11 +744,8 @@ DIRENT2 searchDirByHandle(DIR2 handle){
 
     for(i=0;i<10;i++){
         if(openDirectories[i].handle==handle){
- 
-            if(changeDir(openDirectories[i].path.absolute) == -1){
-                return setNullDirent();
-            }
-            folderContent=readDataClusterFolder(currentPath.clusterNo);
+            
+            folderContent=readDataClusterFolder(openDirectories[i].clusterDir);
             if(openDirectories[i].noReads<folderSize){
             openDirectories[i].directory.fileSize=folderContent[openDirectories[i].noReads].bytesFileSize;
             openDirectories[i].directory.fileType=folderContent[openDirectories[i].noReads].TypeVal;
@@ -760,6 +757,7 @@ DIRENT2 searchDirByHandle(DIR2 handle){
     }
     return setNullDirent();
 }
+
 
 void setCurrentPathToRoot(){
     strcpy(currentPath.absolute,"/");
@@ -775,19 +773,18 @@ DIR2 openDir(char *path){
     }
     else{
     if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
-        return -1;
+        return -2;
     }
     for(i=0;i<10;i++){
         if(openDirectories[i].handle == -1){
             openDirectories[i].handle = i;
+            openDirectories[i].noReads=0;
             if(strcmp(absolute,"/") == 0 || strcmp(path,"/") ==0 ){
-            openDirectories[i].path.clusterNo=superBlock.RootDirCluster;
-            strcpy(openDirectories[i].path.absolute,"/");
+            openDirectories[i].clusterDir=superBlock.RootDirCluster;
             }
             else{
-                openDirectories[i].path.clusterNo=pathToCluster(absolute);
-                strcpy(openDirectories[i].path.absolute,absolute);
-           }
+                openDirectories[i].clusterDir=pathToCluster(absolute);
+            }
             return openDirectories[i].handle;
         }
     }
@@ -799,14 +796,13 @@ void printOpenDirectories(){
     printf("\nLista de diretorios abertos:\n\n");
     for(i=0;i<10;i++)
         if(openDirectories[i].handle!=-1)
-            fprintf(stderr,"%d: %s\tcluster:%d\n",i,openDirectories[i].path.absolute,openDirectories[i].path.clusterNo);
+            fprintf(stderr,"HANDLE:%d: \tCLUSTER:%d\n",i,openDirectories[i].clusterDir);
 }
 
 void freeOpenDirectory(DISK_DIR *opendirectory){
     opendirectory->handle=-1;
-    opendirectory->noReads=0;
-    strcpy(opendirectory->path.absolute,"/");
-    opendirectory->path.clusterNo=superBlock.RootDirCluster;
+    opendirectory->noReads=-1;
+    openDirectories->clusterDir=-1;
     opendirectory->directory=setNullDirent();
 }
 
