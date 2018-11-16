@@ -125,7 +125,12 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna o nï¿
 	Em caso de erro, serï¿½ retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 int write2 (FILE2 handle, char *buffer, int size) {
-    return -1;
+	int bytesWritten;
+
+	bytesWritten = writeFile(handle,buffer,size);
+
+	//TODO: MODIFICAR SIZEOFFILE
+    return bytesWritten;
 }
 
 
@@ -142,8 +147,13 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 	Em caso de erro, serï¿½ retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int truncate2 (FILE2 handle) {
+	int functionReturn;
+
+	functionReturn = truncateFile(handle);
 	
-    return -1;
+	//TODO: MODIFICAR SIZEOFFILE
+	//TODO: MODIFICAR NUMERO DE CLUSTERS
+    return functionReturn;
 }
 
 

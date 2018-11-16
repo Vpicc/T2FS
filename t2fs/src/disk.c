@@ -65,6 +65,8 @@ int init_disk() {
             openFiles[i].file = -1;
             openFiles[i].currPointer = -1;
             openFiles[i].clusterNo = -1;
+            openFiles[i].path = malloc(sizeof(char)*3);
+            openFiles[i].path = "";
             openDirectories[i].handle = -1;
             openDirectories[i].noReads=0;
             openDirectories[i].path.absolute=malloc(sizeof(100));
@@ -956,19 +958,17 @@ FILE2 openFile (char * filename){
         free(secondOut);
         return -1; 
     }
-    struct diskf newFileToRecord;
-
-    newFileToRecord.clusterNo = firstClusterOfFile;
-    newFileToRecord.currPointer = 0;
-    newFileToRecord.file = handle;
-    //adicionei essas linhas pois uso o path na hora de saber o tamanho do arquivo - SAMUEL
-    newFileToRecord.path=malloc(sizeof(absolute)+1);
-    strcpy(newFileToRecord.path,absolute);
-
+   
 //atualização do openFiles
-    memcpy(&openFiles[handle-1], &newFileToRecord, sizeof(struct diskf));
+    openFiles[handle-1].clusterNo = firstClusterOfFile;
+    openFiles[handle-1].currPointer = 0;
+    openFiles[handle-1].file = handle;
+    free(openFiles[handle-1].path);
+    openFiles[handle-1].path=malloc(sizeof(char)*(strlen(absolute)+1));
+    strcpy(openFiles[handle-1].path,absolute);
+
     
-    return newFileToRecord.file;
+    return handle;
 }
 
 int closeFile(FILE2 handle){
@@ -1187,6 +1187,8 @@ int truncateFile(FILE2 handle) {
     int currentPointerInCluster;
     int currentCluster;
     int nextCluster;
+    int truncatedCluster;
+    int previousCluster;
     DWORD value;
 
     while(i < MAX_NUM_FILES && !found){
@@ -1218,6 +1220,7 @@ int truncateFile(FILE2 handle) {
     }
 
     truncateCluster(currentCluster,currentPointerInCluster);
+    truncatedCluster = currentCluster;
 
 
     while((DWORD)nextCluster != END_OF_FILE) {
@@ -1226,11 +1229,15 @@ int truncateFile(FILE2 handle) {
         }
         nextCluster = (int)value;
         if((DWORD)nextCluster != END_OF_FILE) {
+            previousCluster = currentCluster;
             currentCluster = nextCluster;
             truncateCluster(currentCluster,0);
-            writeInFAT(currentCluster,(DWORD)0);
+            writeInFAT(previousCluster,0);
         }
     }
+
+    writeInFAT(currentCluster,0);
+    writeInFAT(truncatedCluster,END_OF_FILE);
 
     return 0;
 }
@@ -1342,7 +1349,7 @@ int writeFile(FILE2 handle, char * buffer, int size) {
     }
 
     
-    return 0;
+    return bytesWritten;
 }
 int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
 
