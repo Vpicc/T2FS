@@ -86,6 +86,14 @@ void printOpenFiles();
 
 FILE2 openFile (char * filename);
 
+int createSoftlink(char *linkname,char *filename);
+
+int readFile (FILE2 handle, char *buffer, int size);
+
+int moveCursor (FILE2 handle, DWORD offset);
+
+int sizeOfFile(char *path);
+
 int writeFile(FILE2 handle, char * buffer, int size);
 
 int closeFile(FILE2 handle);
@@ -96,6 +104,7 @@ typedef struct diskf {
     FILE2 file;
     int currPointer;
     int clusterNo;
+    char *path;
 } DISK_FILE;
 
 typedef struct currp {
