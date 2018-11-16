@@ -5,8 +5,7 @@
 #include "../include/apidisk.h"
 #include "../include/t2fs.h"
 
-//gcc -o testeRead testRead.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeRead
-//gcc -m32 -o testeDisk testDisk.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeSoft
+//gcc -o testeSizing testSizing.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeSizing
 
 void printFAT(int sector) {
     int j;
@@ -59,8 +58,7 @@ void printFolders(int clusterNo) {
 }
 int main(){
 
-FILE2 openFile1,openFile2;
-char *buffer=malloc(sizeof(char)*2000);
+FILE2 openFile1;
 DIR2 openD;
 DIRENT2 direntry;
 int i;
@@ -78,36 +76,19 @@ for(i=0;i<5;i++){
     }
 }
 openFile1=open2("/file1.txt");
+fprintf(stderr,"\n\nHANDLE: %d\n\n",openFile1);
+saida=updateFileSize(openFile1,(DWORD)1);
+fprintf(stderr,"\n\nsaida update: %d\n\n",saida);
 
-    fprintf(stderr,"LENDO ARQUIVO /file1.txt com o handle %d\n\n", openFile1);
-    saida=read2(openFile1,buffer,99);
-    fprintf(stderr,"Retorno do read:%d\n\n",saida);
-    fprintf(stderr,"%s\n",buffer);
-
-    openFile2=open2("/file2.txt");
-
-    fprintf(stderr,"LENDO ARQUIVO /file2.txt com o handle %d\n\n", openFile2);
-    saida=read2(openFile2,buffer,1200);
-    fprintf(stderr,"Retorno do read:%d\n\n",saida);
-    fprintf(stderr,"%s\n",buffer);
-
-    fprintf(stderr,"Retorno do read:%d\n\n",saida);
-    printOpenFiles();
-    i = seek2(openFile1,(DWORD)-10);
-    if(i != 0){
-        fprintf(stderr,"\nErro no seek: %d\n",i);
+openD=openDir("/");
+for(i=0;i<5;i++){
+    if(readdir2(openD,&direntry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"First entry name: %s\n",direntry.name);
+        fprintf(stderr,"First entry fileType: %x\n",direntry.fileType);
+        fprintf(stderr,"First entry size: %x\n\n",direntry.fileSize);
     }
-
-
-    printOpenFiles();
-    fprintf(stderr,"LENDO ARQUIVO /file1.txt com o handle %d\n\n", openFile1);
-    free(buffer);
-    buffer=malloc(sizeof(char)*2000);
-    saida=read2(openFile1,buffer,99);
-    fprintf(stderr,"Retorno do read de %d:%d\n\n",openFile1,saida);
-    fprintf(stderr,"%s\n",buffer);
-    
-    printOpenFiles();
+}
 return 0;
-
 }
