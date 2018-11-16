@@ -738,13 +738,11 @@ DIRENT2 setNullDirent()
 DIRENT2 searchDirByHandle(DIR2 handle){
 
     int i;
-    int found=-1;
     struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
     int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
 
-    for(i=0;i<10 && found==-1;i++){
+    for(i=0;i<10;i++){
         if(openDirectories[i].handle==handle){
-            found=0;
  
             if(changeDir(openDirectories[i].path.absolute) == -1){
                 return setNullDirent();
@@ -767,34 +765,32 @@ void setCurrentPathToRoot(){
     currentPath.clusterNo=superBlock.RootDirCluster;
 }
 
+
 DIR2 openDir(char *path){
-    int i=0;
-    int foundOpenDirectory=-1;
-    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
-
-    setCurrentPathToRoot();
-
-    if(changeDir(path)==-1)
-        return -1;
-    
-    folderContent= readDataClusterFolder(currentPath.clusterNo);
-    if(folderContent[0].TypeVal != TYPEVAL_DIRETORIO){
-        return -2;
+    int i;
+    char *absolute=malloc(sizeof(char)*2);
+    if(strcmp(path,"/") == 0){
+        strcpy(absolute,"/");
     }
-    while(foundOpenDirectory == -1 && i<10){
+    else{
+    if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
+        return -1;
+    }
+    for(i=0;i<10;i++){
         if(openDirectories[i].handle == -1){
             openDirectories[i].handle = i;
-            openDirectories[i].directory.fileSize=folderContent[i].bytesFileSize;
-            openDirectories[i].directory.fileType=folderContent[i].TypeVal;
-            strcpy(openDirectories[i].path.absolute,currentPath.absolute);
-            openDirectories[i].path.clusterNo=currentPath.clusterNo;
-            strcpy(openDirectories[i].directory.name,folderContent[i].name);
-            foundOpenDirectory=0;
+            if(strcmp(absolute,"/") == 0 || strcmp(path,"/") ==0 ){
+            openDirectories[i].path.clusterNo=superBlock.RootDirCluster;
+            strcpy(openDirectories[i].path.absolute,"/");
+            }
+            else{
+                openDirectories[i].path.clusterNo=pathToCluster(absolute);
+                strcpy(openDirectories[i].path.absolute,absolute);
+           }
             return openDirectories[i].handle;
         }
-        i++;
     }
-    return -3;
+    return -1;
 }
 
 void printOpenDirectories(){
@@ -964,6 +960,9 @@ FILE2 openFile (char * filename){
     newFileToRecord.clusterNo = firstClusterOfFile;
     newFileToRecord.currPointer = 0;
     newFileToRecord.file = handle;
+    //adicionei essas linhas pois uso o path na hora de saber o tamanho do arquivo - SAMUEL
+    newFileToRecord.path=malloc(sizeof(absolute)+1);
+    strcpy(newFileToRecord.path,absolute);
 
 //atualização do openFiles
     memcpy(&openFiles[handle-1], &newFileToRecord, sizeof(struct diskf));
@@ -1342,6 +1341,244 @@ int writeFile(FILE2 handle, char * buffer, int size) {
 
     
     return 0;
+}
+int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
+
+    int found=0;
+    int currentPointerInCluster;
+    int currentCluster;
+    int nextCluster;
+    int fileNo;
+    DWORD value;
+    int j;
+    int i=0;
+    int clusterCount=0;
+    unsigned char *prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster+1);
 
 
+    //procura o arquivo pelo handle
+    for(j=0;j<MAX_NUM_FILES && found==0;j++){
+        if(openFiles[j].file == handle){
+            found=1;
+            fileNo=j;
+        }
+
+    }
+    if(found==0){
+        //fprintf(stderr,"\n\nNao achou o handle\n\n");
+        return -1;
+    }
+
+    //atribuicao dos parametros do arquivo
+    currentPointerInCluster = openFiles[fileNo].currPointer;
+    currentCluster = openFiles[fileNo].clusterNo;
+
+    //le o cluster atual
+    prebuffer=readDataCluster(currentCluster);
+
+    while((DWORD)currentCluster != END_OF_FILE && i<size){
+
+        //percorre o buffer até achar o final do arquivo ou do cluster, transferindo os dados para saida
+        while(prebuffer[i-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && prebuffer[currentPointerInCluster-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && currentPointerInCluster < SECTOR_SIZE*superBlock.SectorsPerCluster && i<size){
+            buffer[i]=(unsigned char)prebuffer[i-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster];
+            //fprintf(stderr,"\n%d - %d:%c",i,prebuffer[i],buffer[i]);
+            currentPointerInCluster++;
+            i++;
+        }
+        if(i>=size){
+            fprintf(stderr,"numero lido: %d",i);
+            return -1;
+        }
+    //se ainda nao preencheu o tamanho descrito
+        if(i<size || i>=clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster){
+            if(readInFAT(currentCluster,&value) != 0) {
+                return -2;
+            }else{
+                    nextCluster = (int)value;
+                    free(prebuffer);
+                    prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster+1);
+                    prebuffer=readDataCluster(nextCluster);
+                    currentPointerInCluster=0;
+                    currentCluster = nextCluster;
+            }
+            }
+                clusterCount++;
+        }
+    
+    free(prebuffer);
+    if(i == 0)
+    return -3;
+    openFiles[fileNo].currPointer +=i;
+    return i;
+}
+int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
+
+    char * absolutefilename = malloc(sizeof(char)*2);
+    char * absolute;
+    char * firstOut;
+    char * secondOut;
+    int firstClusterFreeInFAT;
+    int clusterFile;
+    int clusterDotDot;
+
+
+    if(strcmp(filename,"/") ==0)
+        strcpy(absolutefilename,"/");
+    else
+        toAbsolutePath(filename, currentPath.absolute, &absolutefilename);
+                        
+    //adiciono um "/" no final se nao tiver pra poder utilizar a funcao pathToCluster direto
+
+    toAbsolutePath(linkname, currentPath.absolute, &absolute);
+    separatePath(absolute, &firstOut, &secondOut);
+
+    if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){//se n achar um cluster livre na fat
+        free(absolute);
+        free(absolutefilename);
+        free(firstOut);
+        free(secondOut);
+        return -1;
+    }
+        if(strlen(secondOut) == 0){//softlink sem nome
+        free(absolute);
+        free(absolutefilename);
+        free(firstOut);
+        free(secondOut);
+        return -2;
+    }
+    if(!(isRightName(secondOut))){//softlink n pode ter esse nome
+
+        free(absolute);
+        free(absolutefilename);
+        free(firstOut);
+        free(secondOut);
+        return -3;
+    }
+
+    //se o absolute do filename for / entao ele aponta para o root
+    if(strcmp(absolutefilename,"/") == 0){
+        clusterFile = superBlock.RootDirCluster;
+    }
+    else//se nao for, então tem q achar onde fica
+    {   
+        clusterFile = pathToCluster(absolutefilename);
+
+        if(clusterFile == -1){
+        free(absolute);
+        free(absolutefilename);
+        free(firstOut);
+        free(secondOut);
+        return -4;
+    }
+    }
+    //se o firstOut do absolute for '/', então DotDot vai ser o raiz
+    if(strlen(firstOut) == 1 && firstOut[0]== '/'){
+        clusterDotDot = superBlock.RootDirCluster;
+    }
+    else//se nao for, então tem q achar onde fica
+    {
+        clusterDotDot = pathToCluster(firstOut);
+
+        if(clusterDotDot == -1 || isInCluster(clusterDotDot, secondOut,TYPEVAL_LINK) ==1 ){
+
+        free(absolute);
+        free(absolutefilename);
+        free(firstOut);
+        free(secondOut);
+        return -5;
+    }
+    }
+   // fprintf(stderr,"CLUSTER PARA ONDE O SOFTLINK APONTA: %d\n\n", clusterFile);
+    //fprintf(stderr,"CLUSTER DO SOFTLINK CRIADO: %d\n\n", firstClusterFreeInFAT);
+    //fprintf(stderr,"CLUSTER DA PASTA DO SOFTLINK: %d\n\n", clusterDotDot);
+    //fprintf(stderr, "ABSOLUTE FILENAME: %s\n\n", absolutefilename);
+
+    struct t2fs_record link;
+
+    link.TypeVal = TYPEVAL_LINK;
+    strcpy(link.name, secondOut);
+    link.bytesFileSize = sizeof(char)*strlen(absolutefilename);
+    link.clustersFileSize = 1;
+    link.firstCluster = firstClusterFreeInFAT;
+    writeDataClusterFolder(clusterDotDot, link);
+  //  sprintf(buffer,"%d",clusterFile);
+    writeCluster(firstClusterFreeInFAT,(unsigned char *)absolutefilename,0,link.bytesFileSize);
+
+/*    DWORD conv;
+    fprintf(stderr,"\n\n%s\n\n",buffer);
+    conv=convertToDword((unsigned char*)buffer);
+        fprintf(stderr,"\n\n%x\n\n",(DWORD)clusterFile);
+*/
+    writeInFAT(firstClusterFreeInFAT, (DWORD)clusterFile);
+    free(absolute);
+    free(absolutefilename);
+    free(firstOut);
+    free(secondOut);
+
+return 0;
+}
+int sizeOfFile(char *path){
+
+    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+    int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
+    int clusterDir;
+    char * firstOut;
+    char * secondOut;
+    int i;
+    separatePath(path, &firstOut, &secondOut);
+
+    //cluster do diretorio do arquivo
+    clusterDir=pathToCluster(firstOut);
+    if(clusterDir == -1){
+        return -1;
+    }
+    //fprintf(stderr,"\nCLUSTER DIR:%d\n",clusterDir);
+    //verifica o tamanho do arquivo com o nome dado;
+    folderContent=readDataClusterFolder(clusterDir);
+    for(i=0;i<folderSize;i++){
+        if(strcmp(folderContent[i].name,secondOut) == 0){
+            return (int)folderContent[i].bytesFileSize;
+        }
+    }
+    return -2;
+}
+int moveCursor (FILE2 handle, DWORD offset){
+    int found=0;
+    int currentPointer;
+    int currentCluster;
+    int fileNo;
+    int newCursorPointer;
+    int j;
+    char *path;
+    //procura o arquivo pelo handle
+    for(j=0;j<MAX_NUM_FILES && found==0;j++){
+        if(openFiles[j].file == handle){
+            found=1;
+            fileNo=j;
+        }
+
+    }
+    if(found==0){
+        //fprintf(stderr,"\n\nNao achou o handle\n\n");
+        return -1;
+    }
+    //atribuicao dos parametros do arquivo
+    currentPointer = openFiles[fileNo].currPointer;
+    currentCluster= openFiles[fileNo].clusterNo;
+    path=malloc(sizeof(char)*strlen(openFiles[fileNo].path)+1);
+    strcpy(path,openFiles[fileNo].path);
+    //size=sizeOfFile(path);
+    //fprintf(stderr,"%d", size);
+    //novo cp
+    newCursorPointer = currentPointer + (int)offset;
+    if(newCursorPointer > sizeOfFile(path)){
+        return -2;
+    }
+    if((int)offset == -1){
+        newCursorPointer= sizeOfFile(path) + 1;
+    }
+
+    openFiles[fileNo].currPointer= newCursorPointer;
+
+    return 0;
 }
