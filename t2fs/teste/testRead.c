@@ -88,15 +88,17 @@ openFile1=open2("/file1.txt");
     openFile2=open2("/file2.txt");
 
     fprintf(stderr,"LENDO ARQUIVO /file2.txt com o handle %d\n\n", openFile2);
+    saida=read2(openFile2,buffer,1200);
+    fprintf(stderr,"Retorno do read:%d\n\n",saida);
+    fprintf(stderr,"%s\n",buffer);
 
-
-    saida=read2(openFile1,buffer,99);
     fprintf(stderr,"Retorno do read:%d\n\n",saida);
     printOpenFiles();
-    i = seek2(openFile1,(DWORD)-1);
+    i = seek2(openFile1,(DWORD)-55);
     if(i != 0){
         fprintf(stderr,"\nErro no seek: %d\n",i);
     }
+
     printOpenFiles();
 return 0;
 

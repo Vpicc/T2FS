@@ -123,10 +123,11 @@ int main(){
 
     printOpenDirectories();
 
-
+int aux;
      fprintf(stderr,"\n\nCriando um softlink\n\n");
-  if(ln2("/dir1/SOFTLINK_TO_ROOT","/") != 0){
-     fprintf(stderr,"\n\nERRO AO CRIAR SOFTLINK(/)\n\n");
+     aux=ln2("/dir1/sossosofo_file2.txt","/file2.txt");
+  if(aux!= 0){
+     fprintf(stderr,"\n\nERRO AO CRIAR SOFTLINK(/): %d\n\n", aux);
     }else{
         for(i=0;i<5;i++){
         if(readdir2(openD1,&directoryentry)==-1)
@@ -139,17 +140,24 @@ int main(){
     }
     }
 
-         fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para ROOT (cluster 11)\n\n");
+         fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para ROOT\n\n");
         printDataCluster(30);
-         fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para dir1 (cluster15)\n\n");
+         fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para dir1\n\n");
         printDataCluster(29);
+            fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para /file1.txt\n\n");
+        printDataCluster(32);
+                    fprintf(stderr,"\n\nPrintando o softlink criado anteriormente para /file2.txt\n\n");
+        printDataCluster(37);
     printFAT(0);
     readInFAT(30, &value);
-    printf("\nCLUSTER 30 NA FAT APONTA PARA CLUSTER 2 (32): %x\n\n",value);
+    printf("\nCLUSTER 30 NA FAT APONTA PARA CLUSTER 2: %x\n\n",value);
 
         readInFAT(29, &value);
-    printf("\nCLUSTER 29 NA FAT APONTA PARA CLUSTER 5 (35): %x\n\n",value);
-
+    printf("\nCLUSTER 29 NA FAT APONTA PARA CLUSTER 5: %x\n\n",value);
+            readInFAT(32, &value);
+    printf("\nCLUSTER 32 NA FAT APONTA PARA CLUSTER 3: %x\n\n",value);
+            readInFAT(37, &value);
+    printf("\nCLUSTER 37 NA FAT APONTA PARA CLUSTER 4: %x\n\n",value);
 closedir2(openD1);
 closedir2(openD2);
 closedir2(openD3);

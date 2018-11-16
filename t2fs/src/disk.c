@@ -1180,23 +1180,15 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
     int clusterFile;
     int clusterDotDot;
     char *buffer = malloc(sizeof(char)*10);
-    char *clusterFileHelper;
 
 
     if(strcmp(filename,"/") ==0)
         strcpy(absolutefilename,"/");
     else
         toAbsolutePath(filename, currentPath.absolute, &absolutefilename);
-
-
-    clusterFileHelper= malloc(sizeof(char)*(strlen(absolutefilename)+2));
-            
-            
-    strcpy(clusterFileHelper,absolutefilename);
+                        
     //adiciono um "/" no final se nao tiver pra poder utilizar a funcao pathToCluster direto
-    if(absolutefilename[strlen(absolutefilename)-1]!='/' ){
-        strcat(clusterFileHelper,"/");
-    }
+
     toAbsolutePath(linkname, currentPath.absolute, &absolute);
     separatePath(absolute, &firstOut, &secondOut);
 
@@ -1206,7 +1198,6 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
         free(firstOut);
         free(secondOut);
         free(buffer);
-        free(clusterFileHelper);
         return -1;
     }
         if(strlen(secondOut) == 0){//softlink sem nome
@@ -1215,18 +1206,16 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
         free(firstOut);
         free(secondOut);
         free(buffer);
-        free(clusterFileHelper);
-        return -1;
+        return -2;
     }
     if(!(isRightName(secondOut))){//softlink n pode ter esse nome
 
         free(absolute);
-        free(clusterFileHelper);
         free(absolutefilename);
         free(firstOut);
         free(secondOut);
         free(buffer);
-        return -1;
+        return -3;
     }
 
     //se o absolute do filename for / entao ele aponta para o root
@@ -1234,16 +1223,16 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
         clusterFile = superBlock.RootDirCluster;
     }
     else//se nao for, então tem q achar onde fica
-    {
-        clusterFile = pathToCluster(clusterFileHelper);
+    {   
+        clusterFile = pathToCluster(absolutefilename);
+
         if(clusterFile == -1){
         free(absolute);
         free(absolutefilename);
         free(firstOut);
         free(secondOut);
-        free(clusterFileHelper);
         free(buffer); 
-        return -1;
+        return -4;
     }
     }
     //se o firstOut do absolute for '/', então DotDot vai ser o raiz
@@ -1252,21 +1241,20 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
     }
     else//se nao for, então tem q achar onde fica
     {
-
         clusterDotDot = pathToCluster(firstOut);
 
-        if(clusterDotDot == -1){
+        if(clusterDotDot == -1 || isInCluster(clusterDotDot, secondOut,TYPEVAL_LINK) ==1 ){
+
         free(absolute);
         free(absolutefilename);
         free(firstOut);
         free(secondOut);
-        free(clusterFileHelper);
         free(buffer);
-        return -1;
+        return -5;
     }
     }
-//    fprintf(stderr,"CLUSTER PARA ONDE O SOFTLINK APONTA: %d\n\n", clusterFile);
-  //  fprintf(stderr,"CLUSTER DO SOFTLINK CRIADO: %d\n\n", firstClusterFreeInFAT);
+   // fprintf(stderr,"CLUSTER PARA ONDE O SOFTLINK APONTA: %d\n\n", clusterFile);
+    //fprintf(stderr,"CLUSTER DO SOFTLINK CRIADO: %d\n\n", firstClusterFreeInFAT);
     //fprintf(stderr,"CLUSTER DA PASTA DO SOFTLINK: %d\n\n", clusterDotDot);
     //fprintf(stderr, "ABSOLUTE FILENAME: %s\n\n", absolutefilename);
 
@@ -1290,7 +1278,6 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
     free(absolute);
     free(absolutefilename);
     free(firstOut);
-    free(clusterFileHelper);
     free(secondOut);
     free(buffer);
 
@@ -1303,8 +1290,7 @@ int sizeOfFile(char *path){
     int clusterDir;
     char * firstOut;
     char * secondOut;
-    int i=0;
-    int found=0;
+    int i;
     separatePath(path, &firstOut, &secondOut);
 
     //cluster do diretorio do arquivo
@@ -1315,11 +1301,10 @@ int sizeOfFile(char *path){
     //fprintf(stderr,"\nCLUSTER DIR:%d\n",clusterDir);
     //verifica o tamanho do arquivo com o nome dado;
     folderContent=readDataClusterFolder(clusterDir);
-    while(i<folderSize && found==0){
+    for(i=0;i<folderSize;i++){
         if(strcmp(folderContent[i].name,secondOut) == 0){
             return (int)folderContent[i].bytesFileSize;
         }
-        i++;
     }
     return -2;
 }
@@ -1331,7 +1316,6 @@ int moveCursor (FILE2 handle, DWORD offset){
     int newCursorPointer;
     int j;
     char *path;
-    int size;
     //procura o arquivo pelo handle
     for(j=0;j<MAX_NUM_FILES && found==0;j++){
         if(openFiles[j].file == handle){
