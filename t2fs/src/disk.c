@@ -957,7 +957,7 @@ FILE2 openFile (char * filename){
         return -1; 
     }
     struct diskf newFileToRecord;
-
+   
     newFileToRecord.clusterNo = firstClusterOfFile;
     newFileToRecord.currPointer = 0;
     newFileToRecord.file = handle;
@@ -1186,6 +1186,8 @@ int truncateFile(FILE2 handle) {
     int currentPointerInCluster;
     int currentCluster;
     int nextCluster;
+    int truncatedCluster;
+    int previousCluster;
     DWORD value;
 
     while(i < MAX_NUM_FILES && !found){
@@ -1217,6 +1219,7 @@ int truncateFile(FILE2 handle) {
     }
 
     truncateCluster(currentCluster,currentPointerInCluster);
+    truncatedCluster = currentCluster;
 
 
     while((DWORD)nextCluster != END_OF_FILE) {
@@ -1225,11 +1228,15 @@ int truncateFile(FILE2 handle) {
         }
         nextCluster = (int)value;
         if((DWORD)nextCluster != END_OF_FILE) {
+            previousCluster = currentCluster;
             currentCluster = nextCluster;
             truncateCluster(currentCluster,0);
-            writeInFAT(currentCluster,(DWORD)0);
+            writeInFAT(previousCluster,0);
         }
     }
+
+    writeInFAT(currentCluster,0);
+    writeInFAT(truncatedCluster,END_OF_FILE);
 
     return 0;
 }
@@ -1341,7 +1348,7 @@ int writeFile(FILE2 handle, char * buffer, int size) {
     }
 
     
-    return 0;
+    return bytesWritten;
 }
 int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
 

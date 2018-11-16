@@ -67,15 +67,31 @@ int main() {
 
     openFiles[0].file = handle;
     openFiles[0].clusterNo = 60;
-    openFiles[0].currPointer = 15;
+    openFiles[0].currPointer = 0;
     printf("\n\nEscrevendo no Cluster 23 a letra 'b' 1024 vezes, tamanho de um cluster");  
 
     for(i = 0; i < 8096; i++){
         aEveryWhere[i] = 'b';
     }
 
+    writeInFAT(60,61);
+    writeInFAT(61,62);
+    writeInFAT(62,63);
+    writeInFAT(63,END_OF_FILE);
 
-    //truncateFile(handle);
+    writeFile(handle,aEveryWhere,4000);
+
+    printDataCluster(61);
+    printFAT(0);
+
+
+    openFiles[0].currPointer = 3200;
+    truncateFile(handle);
+
+    printDataCluster(61);
+    printDataCluster(62);
+    printDataCluster(63);
+    printFAT(0);
 
 
    //writeFile(handle,"aEveryWhere",11);
@@ -95,8 +111,6 @@ int main() {
 */
 
     //writeFile(handle,aEveryWhere,8092);
-
-    printFAT(0);
 
 
     
