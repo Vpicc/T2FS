@@ -1,2 +1,9 @@
 .vscode
 t2fs/.vscode
+t2fs/teste/dirTest
+t2fs/teste/teste
+t2fs/teste/testeDisk
+t2fs/teste/testePath
+t2fs/teste/testeWrite
+t2fs/teste/testeRead
+t2fs/teste/t2fs_disk.dat
