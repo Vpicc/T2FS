@@ -835,8 +835,12 @@ FILE2 createFile(char * filename){
     int handle;
     handle = makeAnewHandle();
     int clusterToRecordFile;
+    char *linkOutput;
 
-    if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
+    link(filename, &linkOutput); 
+
+
+    if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)){
         printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -1;
     }
@@ -929,8 +933,12 @@ FILE2 openFile (char * filename){
     int handle;
     handle = makeAnewHandle();
     int firstClusterOfFile;
+    char *linkOutput;
 
-    if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
+    link(filename, &linkOutput); 
+
+
+    if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)){
         printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -1;
     }
@@ -985,7 +993,14 @@ int deleteFile(char * filename){
     int clusterToDelete;//cluster que tem q apagar
     unsigned char* bufferWithNulls = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
     DWORD FATrepresentation = 0;
+    BYTE typeToDelete = TYPEVAL_REGULAR;
+    char *linkOutput;
 
+    int aux = link(filename, &linkOutput); 
+
+    if(aux == 1){
+        typeToDelete = TYPEVAL_LINK;
+    }
     //variaveis para a verificação
     int i;
     int isFile = 0;
@@ -1015,7 +1030,7 @@ int deleteFile(char * filename){
         free(absolute);
         free(firstOut);
         free(secondOut);
-        return -1;
+         return -1;
     }
 
     if((clusterToDelete = pathToCluster(absolute))== -1){
@@ -1028,7 +1043,7 @@ int deleteFile(char * filename){
 //Verificação de se é um TYPE FILE mesmo
     readCluster(clusterOfDir, buffer);
     for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
-        if ( (strcmp((char *)buffer+i+1, secondOut) == 0) && (((BYTE) buffer[i]) == TYPEVAL_REGULAR) && !isFile ) {
+        if ( (strcmp((char *)buffer+i+1, secondOut) == 0) && (((BYTE) buffer[i]) == typeToDelete) && !isFile ) {
             isFile = 1;
         } 
     }
@@ -1049,7 +1064,7 @@ int deleteFile(char * filename){
     folderContent.clustersFileSize = 0;
     folderContent.firstCluster = 0;
 
-    if(writeZeroClusterFolderByName(clusterOfDir, folderContent, secondOut, TYPEVAL_REGULAR) == -1){
+    if(writeZeroClusterFolderByName(clusterOfDir, folderContent, secondOut, typeToDelete) == -1){
         free(absolute);
         free(firstOut);
         free(secondOut);
@@ -1058,7 +1073,7 @@ int deleteFile(char * filename){
 
     closeFileByFristCluster(clusterToDelete);
 
-    while( FATrepresentation != END_OF_FILE ){
+    while( FATrepresentation != END_OF_FILE && FATrepresentation != BAD_SECTOR){
 
         readInFAT(clusterToDelete,&FATrepresentation);//le o proximo cluster que tem conteudo do arquivo
         writeInFAT(clusterToDelete, 0);//marca 0 naquela represetanção, pra libera-lá
@@ -1067,7 +1082,7 @@ int deleteFile(char * filename){
         writeCluster(clusterToDelete,bufferWithNulls,0,SECTOR_SIZE*superBlock.SectorsPerCluster);
 
         //atualiza o novo cluster
-        if(FATrepresentation != END_OF_FILE){
+        if(FATrepresentation != END_OF_FILE && FATrepresentation != BAD_SECTOR){
             clusterToDelete = (int) FATrepresentation;
         }
 
@@ -1144,7 +1159,7 @@ int link(char * path, char ** output) {
         free(pathToFile);
         *output = malloc(sizeof(char)*(strlen(path)+1));
         strcpy(*output,path);
-        return 0;
+        return 0;//BOTEI RETORNO COMO 0 PARA NAO SOFTLINK E COMO 1 PARA SOFTLINK -- LUCAS
     }
     
     linkClusterNo = pathToCluster(path);
@@ -1160,7 +1175,8 @@ int link(char * path, char ** output) {
     free(absolute);
     free(fileName);
     free(pathToFile);
-    return 0;
+    //BOTEI RETORNO COMO 0 PARA NAO SOFTLINK E COMO 1 PARA SOFTLINK -- LUCAS
+    return 1;
 }
 
 

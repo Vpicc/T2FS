@@ -57,10 +57,31 @@ void printFolders(int clusterNo) {
 }
 int main() {
     init_disk();
-    deleteFile("./file2.txt");
     printFolders(currentPath.clusterNo);
+    printFAT(0);
+    printf("\nDataCluster ANTES DA DELECAO 4:\n");
     printDataCluster(4);
     printf("\n");
+    printf("\nDataCluster ANTES DA DELECAO 8:\n");
     printDataCluster(8);
+    if(deleteFile("./file2.txt") == -1){
+        printf("ERROR NA DELECAO DO FILE2.TXT");
+    }
+    printFolders(currentPath.clusterNo);
+    printf("\nDataCluster 4 depois da delecao:\n");
+    printDataCluster(4);
+    printf("\n");
+    printf("\nDataCluster 8 depois da delecao:\n");
+    printDataCluster(8);
+    printFAT(0);
+    printf("\n");
+    printf("\nDataCluster ANTES DA DELECAO 9:\n");    
+    printDataCluster(9);
+    if(deleteFile("./link1") == -1){
+        printf("ERROR NA DELECAO DO LINK1");
+    }
+    printFolders(currentPath.clusterNo);
+    printf("\nDataCluster 9 depois da delecao:\n");    
+    printDataCluster(9);
     printFAT(0);
 }

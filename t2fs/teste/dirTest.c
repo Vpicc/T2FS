@@ -213,7 +213,7 @@ printf("\n\n*******TESTE PARA A CREATEFILE");
         printf("\nERROR closeFile 13\n");
     }
     if((handleFile15 = createFile("./dir1/file15.txt")) == -1){
-        printf("\nERRROR createFile15\n");
+        printf("\nERRROR createFile15 second time\n");
     }
     printf("\nMudando para o direotrio './dir1' apois a criação de 11 arquivos(file5 ... file 14)");
     if(changeDir("./dir1") == -1){
@@ -226,6 +226,8 @@ printf("\n\n*******TESTE PARA A CREATEFILE");
     printf("\nFOLDERS DO DIREOTIRO DIR1, ONDE FOI CRIADO OS ARQUIVOS e deletado o 15");
     printFolders(currentPath.clusterNo);
 
+    changeDir("/");
+    openFile("link1");
     printf("\nPRINT DA FAT\n");
     printFAT(0);
     printf("\nPRINT DOS ARQUIVOS ABERTOS\n");
