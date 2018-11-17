@@ -1342,6 +1342,8 @@ int writeFile(FILE2 handle, char * buffer, int size) {
     if(remainingSize != 0) {
         return -1;
     }
+    if(setRealDealFileSizeOfChaos(handle) != 0)
+        return -2;
 
     
     return bytesWritten;
@@ -1390,7 +1392,7 @@ int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
             i++;
         }
         if(i>=size){
-            fprintf(stderr,"numero lido: %d",i);
+            //fprintf(stderr,"numero lido: %d",i);
             return -1;
         }
     //se ainda nao preencheu o tamanho descrito
@@ -1414,6 +1416,50 @@ int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
     return -3;
     openFiles[fileNo].currPointer +=i;
     return i;
+}
+
+int setRealDealFileSizeOfChaos(FILE2 handle){
+
+    int found=0;
+    int currentPointer;
+    int filesize;
+    int fileNo;
+    int j;
+    char *buffer=malloc(sizeof(char)*3000);
+
+    //procura o arquivo pelo handle
+    for(j=0;j<MAX_NUM_FILES && found==0;j++){
+        if(openFiles[j].file == handle){
+            found=1;
+            fileNo=j;
+        }
+
+    }
+    if(found==0){
+        //fprintf(stderr,"\n\nNao achou o handle\n\n");
+        return -1;
+    }
+    //SALVO CURSOR ATUAL
+    currentPointer=openFiles[fileNo].currPointer;
+    //COLOCO CURSOR NO COMECO DO ARQUIVO
+    if(moveCursor(handle,(DWORD)0)!=0)
+        return -1;
+    //OBTENHO O TAMANHO REAL DO ARQUIVO -- OBS: AQUI TEM Q TER UM BUFFER ENORME PRA GARANTIR
+    filesize=readFile(handle,buffer,3000);
+    if(filesize <0)
+    {
+        return -2;
+    }
+    //ATUALIZO O FILE SIZE
+    if(updateFileSize(handle,(DWORD)filesize) != 0){
+        return -3;
+    }
+    //VOLTO O CURSOR PRA ONDE ESTAVA -- DEVE SER MENOR QUE O NOVO FILESIZE
+    if(moveCursor(handle,(DWORD)currentPointer)!=0){
+        return -4;
+    }
+    free(buffer);
+    return 0;
 }
 
 int updateFileSize(FILE2 handle,DWORD newFileSize){

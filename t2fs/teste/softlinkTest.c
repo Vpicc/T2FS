@@ -125,7 +125,8 @@ int main(){
 
 int aux;
      fprintf(stderr,"\n\nCriando um softlink\n\n");
-     aux=ln2("/dir1/sossosofo_file2.txt","/file2.txt");
+     aux=ln2("/sossosofo_file2.txt","/file2.txt");
+     fprintf(stderr,"AQUI!");
   if(aux!= 0){
      fprintf(stderr,"\n\nERRO AO CRIAR SOFTLINK(/): %d\n\n", aux);
     }else{
