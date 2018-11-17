@@ -802,7 +802,7 @@ void printOpenDirectories(){
 void freeOpenDirectory(DISK_DIR *opendirectory){
     opendirectory->handle=-1;
     opendirectory->noReads=-1;
-    openDirectories->clusterDir=-1;
+    opendirectory->clusterDir=-1;
     opendirectory->directory=setNullDirent();
 }
 
@@ -811,7 +811,7 @@ int closeDir(DIR2 handle){
 
     for(i=0;i<10;i++){
         if(openDirectories[i].handle==handle){
-            freeOpenDirectory(&openDirectories[i]);
+            freeOpenDirectory(&openDirectories[openDirectories[i].handle]);
             return 0;
         }
     }
@@ -1416,15 +1416,19 @@ int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
     openFiles[fileNo].currPointer +=i;
     return i;
 }
-
-int setRealDealFileSizeOfChaos(FILE2 handle){
+int realFileSize (FILE2 handle){ //IN PROGRESS
 
     int found=0;
-    int currentPointer;
-    int filesize;
+    int currentPointerInCluster;
+    int currentCluster;
+    int nextCluster;
     int fileNo;
+    DWORD value;
     int j;
-    char *buffer=malloc(sizeof(char)*3000);
+    int i=0;
+    int clusterCount=0;
+    unsigned char *prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster+1);
+
 
     //procura o arquivo pelo handle
     for(j=0;j<MAX_NUM_FILES && found==0;j++){
@@ -1438,13 +1442,50 @@ int setRealDealFileSizeOfChaos(FILE2 handle){
         //fprintf(stderr,"\n\nNao achou o handle\n\n");
         return -1;
     }
-    //SALVO CURSOR ATUAL
-    currentPointer=openFiles[fileNo].currPointer;
-    //COLOCO CURSOR NO COMECO DO ARQUIVO
-    if(moveCursor(handle,(DWORD)0)!=0)
-        return -1;
+
+    //atribuicao dos parametros do arquivo
+    currentPointerInCluster = 0;
+    currentCluster = openFiles[fileNo].clusterNo;
+
+    //le o cluster atual
+    prebuffer=readDataCluster(currentCluster);
+
+    while((DWORD)currentCluster != END_OF_FILE && (DWORD)currentCluster != BAD_SECTOR){
+
+        //percorre o buffer até achar o final do arquivo ou do cluster, transferindo os dados para saida
+        while(prebuffer[i-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && prebuffer[currentPointerInCluster-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && currentPointerInCluster < SECTOR_SIZE*superBlock.SectorsPerCluster){
+            //fprintf(stderr,"\n%d - %d:%c",i,prebuffer[i],buffer[i]);
+            currentPointerInCluster++;
+            i++;
+        }
+    //se ainda nao preencheu o tamanho descrito
+        if(i>=clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster){
+            if(readInFAT(currentCluster,&value) != 0) {
+                return -2;
+            }else{
+                    nextCluster = (int)value;
+                    free(prebuffer);
+                    prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster+1);
+                    prebuffer=readDataCluster(nextCluster);
+                    currentPointerInCluster=0;
+                    currentCluster = nextCluster;
+            }
+            }
+                clusterCount++;
+        }
+    
+    free(prebuffer);
+    if(i == 0)
+    return -3;
+    return i;
+}
+
+int setRealDealFileSizeOfChaos(FILE2 handle){
+
+    int filesize;
+
     //OBTENHO O TAMANHO REAL DO ARQUIVO -- OBS: AQUI TEM Q TER UM BUFFER ENORME PRA GARANTIR
-    filesize=readFile(handle,buffer,3000);
+    filesize=realFileSize(handle);
     if(filesize <0)
     {
         return -2;
@@ -1453,11 +1494,7 @@ int setRealDealFileSizeOfChaos(FILE2 handle){
     if(updateFileSize(handle,(DWORD)filesize) != 0){
         return -3;
     }
-    //VOLTO O CURSOR PRA ONDE ESTAVA -- DEVE SER MENOR QUE O NOVO FILESIZE
-    if(moveCursor(handle,(DWORD)currentPointer)!=0){
-        return -4;
-    }
-    free(buffer);
+
     return 0;
 }
 
