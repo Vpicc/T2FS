@@ -1620,7 +1620,9 @@ int moveCursor (FILE2 handle, DWORD offset){
     currentCluster= openFiles[fileNo].clusterNo;
 
     //novo cp
-    newCursorPointer = currentPointer + (int)offset;
+    newCursorPointer = (int)offset;
+    if(newCursorPointer<-1)
+        return -3;
 
     if(newCursorPointer > sizeOfFile(openFiles[fileNo].clusterDir,openFiles[fileNo].clusterNo) || newCursorPointer<0){
         fprintf(stderr,"SIZE OF FILE: %d\n\n",sizeOfFile(openFiles[fileNo].clusterDir,openFiles[fileNo].clusterNo));
