@@ -763,18 +763,57 @@ void setCurrentPathToRoot(){
     strcpy(currentPath.absolute,"/");
     currentPath.clusterNo=superBlock.RootDirCluster;
 }
+DWORD getTypeVal(char *absolute){
 
+    char *firstOut;
+    char *secondOut;
+    struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
+    int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
+    int i;
+    int clusterDir;
+
+    separatePath(absolute, &firstOut, &secondOut);
+
+    clusterDir=pathToCluster(firstOut);
+    folderContent=readDataClusterFolder(clusterDir);
+    for(i=0;i<folderSize;i++){
+        if(strcmp(folderContent[i].name,secondOut) ==0 ){
+            return folderContent[i].TypeVal;
+        }
+    }
+return TYPEVAL_INVALIDO;
+
+}
 
 DIR2 openDir(char *path){
     int i;
     char *absolute=malloc(sizeof(char)*2);
+    int dirCluster;
+    char *linkOutput;
+    int retornoLink;
+
     if(strcmp(path,"/") == 0){
         strcpy(absolute,"/");
+    }else{
+        retornoLink=link(path, &linkOutput);
+        if(retornoLink < 0){
+            return -4;
+        }else if(retornoLink ==1){
+            if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)){
+            return -1;
+            } 
+        }else{
+            if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
+            return -2;
+        }
+        //checking type
+        //fprintf(stderr,"\n\nABSOLUTE NO OPENDIR: %s\n\n",absolute);
+        if(getTypeVal(absolute) != TYPEVAL_DIRETORIO){
+            return -5;
+        }
     }
-    else{
-    if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1)
-        return -2;
-    }
+    
+     dirCluster=pathToCluster(absolute);
     for(i=0;i<10;i++){
         if(openDirectories[i].handle == -1){
             openDirectories[i].handle = i;
@@ -783,7 +822,7 @@ DIR2 openDir(char *path){
             openDirectories[i].clusterDir=superBlock.RootDirCluster;
             }
             else{
-                openDirectories[i].clusterDir=pathToCluster(absolute);
+                openDirectories[i].clusterDir=dirCluster;
             }
             return openDirectories[i].handle;
         }
@@ -1385,8 +1424,8 @@ int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
 
         //percorre o buffer até achar o final do arquivo ou do cluster, transferindo os dados para saida
         while(prebuffer[i-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && prebuffer[currentPointerInCluster-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && currentPointerInCluster < SECTOR_SIZE*superBlock.SectorsPerCluster && i<size){
-            buffer[i]=(unsigned char)prebuffer[currentPointerInCluster-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster];
-            //fprintf(stderr,"\n%d - %d:%c",i,prebuffer[i],buffer[i]);
+            buffer[i]=(unsigned char)prebuffer[currentPointerInCluster];
+            //fprintf(stderr,"\n%d - %c:%c",i,prebuffer[i],buffer[i]);
             currentPointerInCluster++;
             i++;
         }
@@ -1394,6 +1433,9 @@ int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
             //fprintf(stderr,"numero lido: %d",i);
             return -1;
         }
+        //    fprintf(stderr,"\n\nPREBUFFER:%s\n\n",prebuffer);
+        //    fprintf(stderr,"\n\nBUFFER:%s\n\n",buffer);
+
     //se ainda nao preencheu o tamanho descrito
         if(i<size || i>=clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster){
             if(readInFAT(currentCluster,&value) != 0) {
@@ -1409,7 +1451,6 @@ int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
             }
                 clusterCount++;
         }
-    
     free(prebuffer);
     if(i == 0)
     return -3;

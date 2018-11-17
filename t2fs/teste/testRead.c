@@ -68,7 +68,7 @@ int saida;
 
 fprintf(stderr,"RETURN do INIT:%d",init_disk());
 
-openD=opendir2("/");
+openD=opendir2("/file1.txt");
 fprintf(stderr,"handle :%d",openD);
 printOpenDirectories();
 
@@ -103,7 +103,7 @@ openFile1=open2("/file1.txt");
 
     openFile2=open2("/file2.txt");
 
-    seek2(openFile2,);
+
     saida=realFileSize(openFile2);
 
     if(saida < 0)

@@ -96,7 +96,7 @@ int main(){
 
 int aux;
      fprintf(stderr,"\n\nCriando um softlink\n\n");
-     aux=ln2("/sossosofo_to_ROOT","/");
+     aux=ln2("/link2","dir1");
   if(aux!= 0){
      fprintf(stderr,"\n\nERRO AO CRIAR SOFTLINK(/): %d\n\n", aux);
     }
@@ -110,7 +110,11 @@ int aux;
             fprintf(stderr,"Entry size: %x\n\n",directoryentry.fileSize); 
     }
     }
-closedir2(openD1);
+printOpenDirectories();
+closedir2(openD2);
+openD2=opendir2("link2");
+    printOpenDirectories();
+
 closedir2(openD2);
 closedir2(openD3);
 
