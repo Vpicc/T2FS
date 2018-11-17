@@ -440,8 +440,19 @@ int separatePath(char * path, char ** FristStringOutput, char ** SecondStringOut
     return 0;
 }
 int changeDir(char * path){
+
     char * absolute;
+    char * firstOut;
+    char * secondOut;
     int clusterNewPath;
+    int i;
+    int isDir = 0;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    int clusterOfDir;
+    char *linkOutput;
+
+    //link(path, &linkOutput); // WHYYYYYYYYYYYYYYY???????????
 
     if(strlen(path) == 0){ //Se a string for vazia n altera o lugar
         return 0;
@@ -455,6 +466,24 @@ int changeDir(char * path){
     if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1){
         free(absolute);
         return -1;
+    }
+
+    if(separatePath(absolute, &firstOut, &secondOut) == -1){
+        return -1;
+    }
+
+    clusterOfDir = pathToCluster(firstOut);
+
+    readCluster(clusterOfDir, buffer);
+    if(strlen(secondOut) > 0){
+        for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
+            if ( (strcmp((char *)buffer+i+1, secondOut) == 0) && (((BYTE) buffer[i]) == TYPEVAL_DIRETORIO) && !isDir ) {
+                isDir = 1;
+            } 
+        }
+        if(isDir == 0){
+            return -1;
+        }
     }
 //se o absoluto do atual com o path for /, então é pq é o ROOT.
     if(strlen(absolute)== 1 && absolute[0] == '/'){
