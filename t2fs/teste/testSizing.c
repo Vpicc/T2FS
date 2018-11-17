@@ -63,9 +63,10 @@ DIR2 openD;
 DIRENT2 direntry;
 int i;
 int saida;
+char buffer[300]={"ESCREVE ISSO VACILAO"};
+char bufferout[4000];
 init_disk();
-
-openD=openDir("/");
+openD=opendir2("/");
 for(i=0;i<5;i++){
     if(readdir2(openD,&direntry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
@@ -75,12 +76,17 @@ for(i=0;i<5;i++){
         fprintf(stderr,"First entry size: %x\n\n",direntry.fileSize);
     }
 }
-openFile1=open2("/file2.txt");
-fprintf(stderr,"\n\nHANDLE: %d\n\n",openFile1);
-saida=updateFileSize(openFile1,(DWORD)10);
-fprintf(stderr,"\n\nsaida update: %d\n\n",saida);
-
-openD=openDir("/");
+openFile1=openFile("/file2.txt");
+printOpenFiles();
+seek2(openFile1, (DWORD)1090);
+saida =writeFile(openFile1,buffer,20);
+if(saida != 0)
+    fprintf(stderr,"\n\nSAIDA WRITE: %d\n\n",saida);
+closedir2(openD);
+seek2(openFile1,0);
+read2(openFile1,bufferout,3000);
+    fprintf(stderr,"\n\n%s\n\n",bufferout);
+openD=opendir2("/");
 for(i=0;i<5;i++){
     if(readdir2(openD,&direntry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
@@ -90,5 +96,6 @@ for(i=0;i<5;i++){
         fprintf(stderr,"First entry size: %x\n\n",direntry.fileSize);
     }
 }
+
 return 0;
 }

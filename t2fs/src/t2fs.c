@@ -301,7 +301,7 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry) {
 	DIRENT2 diretoryentry;
 	diretoryentry=searchDirByHandle(handle);
 	*dentry=diretoryentry;
-	if(strcmp(diretoryentry.name,"")==0)
+	if(diretoryentry.fileSize==(DWORD)-1)
 		return -1;
 	
 	return 0;
