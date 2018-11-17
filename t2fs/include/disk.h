@@ -119,7 +119,7 @@ CURRENT_PATH currentPath;
 typedef struct diskd {
     DIR2 handle;
     int noReads;
-    struct currp path;
+    int clusterDir;
     DIRENT2 directory;
 } DISK_DIR;
 
