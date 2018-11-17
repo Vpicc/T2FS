@@ -85,7 +85,7 @@ if(saida != 0)
 closedir2(openD);
 seek2(openFile1,0);
 read2(openFile1,bufferout,3000);
-fprintf(stderr,"\n\n%s\n\n",bufferout);
+    fprintf(stderr,"\n\n%s\n\n",bufferout);
 openD=opendir2("/");
 for(i=0;i<5;i++){
     if(readdir2(openD,&direntry)==-1)
