@@ -65,6 +65,7 @@ int init_disk() {
             openFiles[i].file = -1;
             openFiles[i].currPointer = -1;
             openFiles[i].clusterNo = -1;
+            openFiles[i].path = malloc(sizeof(300));
             openDirectories[i].handle = -1;
             openDirectories[i].noReads=0;
             openDirectories[i].path.absolute=malloc(sizeof(100));
@@ -485,28 +486,32 @@ int mkdir(char * path){
     char * secondOut;
     int firstClusterFreeInFAT;
     int clusterDotDot;
+    printf("Ate aqui vai 0");
     toAbsolutePath(path, currentPath.absolute, &absolute);
     separatePath(absolute, &firstOut, &secondOut);
 
+    printf("Ate aqui vai 1");
     if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){//se n achar um cluster livre na fat
         free(absolute);
         free(firstOut);
         free(secondOut);
         return -1;
     }
+    printf("Ate aqui vai 2");
     if(strlen(secondOut) == 0){//diretorio sem nome
         free(absolute);
         free(firstOut);
         free(secondOut);
         return -1;
     }
+    printf("Ate aqui vai 3");
     if(!(isRightName(secondOut))){//diretorios n podem ter esse nome
         free(absolute);
         free(firstOut);
         free(secondOut);
         return -1;
     }
-
+    printf("Ate aqui vai 4");
 //se o firstOut do absolute for '/', então DotDot vai ser o raiz
     if(strlen(firstOut) == 1 && firstOut[0]== '/'){
         clusterDotDot = superBlock.RootDirCluster;
@@ -825,6 +830,7 @@ int closeDir(DIR2 handle){
 }
 
 FILE2 createFile(char * filename){
+   // printf("\nENTREI");
     char * absolute;
     char * firstOut;
     char * secondOut;
@@ -836,16 +842,17 @@ FILE2 createFile(char * filename){
 
     link(filename, &linkOutput); 
 
-
+   // printf("\nate aqui ta indo 1\n");
     if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)){
         printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -1;
     }
-
+   // printf("ate aqui ta indo 2\n");
     if(separatePath(absolute, &firstOut, &secondOut)){
         printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -1;
     }
+   // printf("ate aqui ta indo 3\n");
     clusterToRecordFile = pathToCluster(firstOut);
 //caminho inexistente
     if(clusterToRecordFile == -1){
@@ -859,6 +866,7 @@ FILE2 createFile(char * filename){
         free(secondOut);
         return -1;
     }
+  //  printf("ate aqui ta indo 4\n");
 //diretorios n podem ter esse nome
     if(!(isRightName(secondOut))){
         free(absolute);
@@ -866,6 +874,7 @@ FILE2 createFile(char * filename){
         free(secondOut);
         return -1;
     }
+   // printf("ate aqui ta indo 5\n");
 //n tinha espaço para adicionar um novo arquivos
     if(handle == -1){
         free(absolute);
@@ -873,6 +882,7 @@ FILE2 createFile(char * filename){
         free(secondOut);
         return -1; 
     }
+  //  printf("ate aqui ta indo 6\n");
 //se n achar um cluster livre na fat
     if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){
         free(absolute);
@@ -880,6 +890,7 @@ FILE2 createFile(char * filename){
         free(secondOut);
         return -1;
     }
+  //  printf("ate aqui ta indo 7\n");
 //se ja tiver um arquivo com esse nome nesse diretorio
 //TODO: TEM Q APGAR O TEM E COLOCAR O NOVO.
     if(isInCluster(clusterToRecordFile, secondOut, TYPEVAL_REGULAR)){
@@ -888,7 +899,7 @@ FILE2 createFile(char * filename){
         free(secondOut);
         return -1;
     }
-
+   // printf("ate aqui ta indo 8\n");
 //criação das estruturas
     struct t2fs_record toRecord;
 
@@ -898,14 +909,15 @@ FILE2 createFile(char * filename){
     toRecord.bytesFileSize = 0;
     toRecord.clustersFileSize = 1;
     toRecord.firstCluster = firstClusterFreeInFAT;
-
+   // printf("ate aqui ta indo 9\n");
 //escrita no diretorio
     if(writeDataClusterFolder(clusterToRecordFile, toRecord) == - 1){//se n tiver espaço na folder
         return -1;
     }
+   // printf("ate aqui ta indo 10\n");
 //marcação na fat de cluster ocupado
     writeInFAT(firstClusterFreeInFAT, END_OF_FILE);
-
+   // printf("ate aqui ta indo 11\n");
 //retorna o handle já colocando ele no array de opens
     return (openFile (filename));
 }
@@ -956,19 +968,23 @@ FILE2 openFile (char * filename){
         free(secondOut);
         return -1; 
     }
-    struct diskf newFileToRecord;
+/*    struct diskf newFileToRecord;
 
     newFileToRecord.clusterNo = firstClusterOfFile;
     newFileToRecord.currPointer = 0;
     newFileToRecord.file = handle;
     //adicionei essas linhas pois uso o path na hora de saber o tamanho do arquivo - SAMUEL
-    newFileToRecord.path=malloc(sizeof(absolute)+1);
+    newFileToRecord.path;
     strcpy(newFileToRecord.path,absolute);
 
 //atualização do openFiles
-    memcpy(&openFiles[handle-1], &newFileToRecord, sizeof(struct diskf));
+    memcpy(&openFiles[handle-1], &newFileToRecord, sizeof(struct diskf));*/
+    openFiles[handle-1].clusterNo = firstClusterOfFile;
+    openFiles[handle-1].currPointer = 0;
+    openFiles[handle-1].file = handle;
+    strcpy(openFiles[handle-1].path, absolute); 
     
-    return newFileToRecord.file;
+    return handle;
 }
 
 int closeFile(FILE2 handle){

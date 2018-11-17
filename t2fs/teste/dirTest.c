@@ -142,7 +142,7 @@ int main() {
         printf("Error na deleção");
     }
     if(deleteDir("./file1.txt") == -1){
-        printf("\nFEITO N REMOVEU O FILE1\n");
+        printf("\nFEITO N REMOVEU O FILE1 pq ele n é diretorio\n");
     }
     printf("Path atual depois da delecao: %s\n", currentPath.absolute);
     printf("Indo para o direito dir1\n");
@@ -159,6 +159,7 @@ int main() {
 printf("PRINT DA FAT ANTES DA CRIACAO DOS ARQUIVOS");
     printFAT(0);
 //Teste para a função createFile
+/*
 printf("\n\n*******TESTE PARA A CREATEFILE");
     int handleFile5;
     int handleFile6;
@@ -232,7 +233,7 @@ printf("\n\n*******TESTE PARA A CREATEFILE");
     printFAT(0);
     printf("\nPRINT DOS ARQUIVOS ABERTOS\n");
     printOpenFiles();
-
+*/
 /*
 //Teste da função getcwd2
 printf("\n\n*******TESTE PARA A FUNCAO GETCWD2");
