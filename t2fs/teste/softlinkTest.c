@@ -78,35 +78,7 @@ int main(){
     
 
     printOpenDirectories();
-    fprintf(stderr,"\n\nTESTANDO READDIR2\n\n");
-
-    fprintf(stderr,"Utilizando handle 0\n\n");
-
-
-    if(readdir2(openD1,&directoryentry)==-1)
-        fprintf(stderr,"Erro ao ler diretorio\n\n");
-    else{
-        fprintf(stderr,"First entry name: %s\n",directoryentry.name);
-        fprintf(stderr,"First entry fileType: %x\n",directoryentry.fileType);
-        fprintf(stderr,"First entry size: %x\n\n",directoryentry.fileSize);
-    }
-        if(readdir2(openD1,&directoryentry)==-1)
-        fprintf(stderr,"Erro ao ler diretorio\n");
-    else{
-        fprintf(stderr,"Second entry name: %s\n",directoryentry.name);
-        fprintf(stderr,"Second entry fileType: %x\n",directoryentry.fileType);
-        fprintf(stderr,"Second entry size: %x\n\n",directoryentry.fileSize);
-    }
-     if(readdir2(openD1,&directoryentry)==-1)
-        fprintf(stderr,"Erro ao ler diretorio\n\n");
-    else{
-        fprintf(stderr,"Third entry name: %s\n",directoryentry.name);
-        fprintf(stderr,"Third entry fileType: %x\n",directoryentry.fileType);
-        fprintf(stderr,"Third entry size: %x\n",directoryentry.fileSize);
-    }
-    printf("\n\n");
-
-    printf("\n\n\n");
+    
 
     fprintf(stderr,"FECHANDO DIRETORIOs\n\n");
 
@@ -125,12 +97,12 @@ int main(){
 
 int aux;
      fprintf(stderr,"\n\nCriando um softlink\n\n");
-     aux=ln2("/dir1/sossosofo_file2.txt","/file2.txt");
+     aux=ln2("/sossosofo_file2.txt","/file2.txt");
   if(aux!= 0){
      fprintf(stderr,"\n\nERRO AO CRIAR SOFTLINK(/): %d\n\n", aux);
     }else{
-        for(i=0;i<5;i++){
-        if(readdir2(openD1,&directoryentry)==-1)
+        for(i=0;i<10;i++){
+        if(readdir2(openD2,&directoryentry)==-1)
         fprintf(stderr,"Erro ao ler diretorio\n\n");
     else{
         fprintf(stderr,"Entry name: %s\n",directoryentry.name);

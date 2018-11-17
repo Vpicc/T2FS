@@ -92,7 +92,7 @@ int readFile (FILE2 handle, char *buffer, int size);
 
 int moveCursor (FILE2 handle, DWORD offset);
 
-int sizeOfFile(char *path);
+int sizeOfFile(int clusterDir, int clusterFile);
 
 int writeFile(FILE2 handle, char * buffer, int size);
 
@@ -100,11 +100,15 @@ int closeFile(FILE2 handle);
 
 int closeFileByFristCluster(int clusterToClose);
 
+int updateFileSize(FILE2 handle,DWORD newFileSize);
+
+int setRealDealFileSizeOfChaos(FILE2 handle);
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;
     int clusterNo;
-    char *path;
+    int clusterDir;
 } DISK_FILE;
 
 typedef struct currp {
@@ -117,7 +121,7 @@ CURRENT_PATH currentPath;
 typedef struct diskd {
     DIR2 handle;
     int noReads;
-    struct currp path;
+    int clusterDir;
     DIRENT2 directory;
 } DISK_DIR;
 

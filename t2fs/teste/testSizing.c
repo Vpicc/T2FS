@@ -4,8 +4,8 @@
 #include "../include/disk.h"
 #include "../include/apidisk.h"
 #include "../include/t2fs.h"
-// gcc -o testeWrite writeTest.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeWrite
-// gcc -m32 -o testeWrite writeTest.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeWrite
+
+//gcc -o testeSizing testSizing.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testeSizing
 
 void printFAT(int sector) {
     int j;
@@ -16,6 +16,7 @@ void printFAT(int sector) {
         printf("%x ",buffer[j]);
     }
     printf("\n");
+
 }
 
 void printDataSector(int clusterNo) {
@@ -39,6 +40,7 @@ void printDataCluster(int clusterNo) {
         printf("%c",buffer[j]);
     }
     printf("\n");
+
 }
 
 void printFolders(int clusterNo) {
@@ -54,70 +56,46 @@ void printFolders(int clusterNo) {
         printf("FIRSTCLUSTER: %x\n", folderContent[i].firstCluster);
     }
 }
+int main(){
 
-
-int main() {
-    int i;
-    char aEveryWhere[8096];
-    FILE2 handle = 0;
-
-    init_disk();
-
-    writeInFAT(60,END_OF_FILE);
-
-    openFiles[0].file = handle;
-    openFiles[0].clusterNo = 60;
-    openFiles[0].currPointer = 0;
-    printf("\n\nEscrevendo no Cluster 23 a letra 'b' 1024 vezes, tamanho de um cluster");  
-
-    for(i = 0; i < 8096; i++){
-        aEveryWhere[i] = 'b';
+FILE2 openFile1;
+DIR2 openD;
+DIRENT2 direntry;
+int i;
+int saida;
+char buffer[300]={"ESCREVE ISSO VACILAO"};
+char bufferout[4000];
+init_disk();
+openD=opendir2("/");
+for(i=0;i<5;i++){
+    if(readdir2(openD,&direntry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"First entry name: %s\n",direntry.name);
+        fprintf(stderr,"First entry fileType: %x\n",direntry.fileType);
+        fprintf(stderr,"First entry size: %x\n\n",direntry.fileSize);
     }
+}
+openFile1=openFile("/file2.txt");
+printOpenFiles();
+seek2(openFile1, (DWORD)1090);
+saida =writeFile(openFile1,buffer,20);
+if(saida != 0)
+    fprintf(stderr,"\n\nSAIDA WRITE: %d\n\n",saida);
+closedir2(openD);
+seek2(openFile1,0);
+read2(openFile1,bufferout,3000);
+    fprintf(stderr,"\n\n%s\n\n",bufferout);
+openD=opendir2("/");
+for(i=0;i<5;i++){
+    if(readdir2(openD,&direntry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"First entry name: %s\n",direntry.name);
+        fprintf(stderr,"First entry fileType: %x\n",direntry.fileType);
+        fprintf(stderr,"First entry size: %x\n\n",direntry.fileSize);
+    }
+}
 
-    writeInFAT(60,61);
-    writeInFAT(61,62);
-    writeInFAT(62,63);
-    writeInFAT(63,END_OF_FILE);
-
-    writeFile(handle,aEveryWhere,4000);
-
-    printDataCluster(61);
-    printFAT(0);
-
-
-    openFiles[0].currPointer = 3200;
-    truncateFile(handle);
-
-    printDataCluster(61);
-    printDataCluster(62);
-    printDataCluster(63);
-    printFAT(0);
-
-
-   //writeFile(handle,"aEveryWhere",11);
-
-    
-
-
-/*
-    printDataSector(60);
-    printDataSector(11);
-    printDataSector(13);
-    printDataSector(15);
-    printDataSector(16);
-    printDataSector(17);
-    printDataSector(18);
-    printDataSector(19);
-*/
-
-    //writeFile(handle,aEveryWhere,8092);
-
-
-    
-    
-
-    
-
-
-    return 0;
+return 0;
 }
