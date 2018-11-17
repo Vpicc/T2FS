@@ -66,12 +66,12 @@ int main() {
         printf("\nError\n");
     }
     if(mkdir("../abra") == -1){
-        printf("\nError\n");
+        printf("\nError pq tentou criar um direitorio ja existente\n");
     }    
     printf("***Folders da ROOT:\n");
     printFolders(2);
     printf("\n***Mudando para o diretorio recem criado '/abra'\n");
-    if(changeDir("abra") == -1){
+    if(changeDir("./abra") == -1){
         printf("\nError change abra\n");
     }
     printf("Folders do direitorio '/abra':\n");
@@ -96,7 +96,7 @@ int main() {
     printf("\nPath atual depois da criação do abra2 dentro do dir1 estando na raiz: %s\n", currentPath.absolute);
     printf("\n**Indo para o direito 'abra'\n");
     if(changeDir("./abra") == -1){//esse diretorio n existe mais
-        printf("\nError change ./abra\n");
+        printf("\nError change ./abra, esse diretorio n existe\n");
     }
     printf("Path atual: %s\n", currentPath.absolute);
     printf("\n**Indo para o direito ' '\n");
@@ -142,7 +142,7 @@ int main() {
         printf("Error na deleção");
     }
     if(deleteDir("./file1.txt") == -1){
-        printf("\nFEITO N REMOVEU O FILE1 pq ele n é diretorio\n");
+        printf("\nDelete Dir só remove diretorios!\n");
     }
     printf("Path atual depois da delecao: %s\n", currentPath.absolute);
     printf("Indo para o direito dir1\n");
@@ -156,101 +156,13 @@ int main() {
     if(changeDir("../") == -1){
         printf("\nERROR 1\n");
     }
-printf("PRINT DA FAT ANTES DA CRIACAO DOS ARQUIVOS");
-    printFAT(0);
-//Teste para a função createFile
-/*
-printf("\n\n*******TESTE PARA A CREATEFILE");
-    int handleFile5;
-    int handleFile6;
-    int handleFile7;
-    int handleFile8;
-    int handleFile9;
-    int handleFile10;
-    int handleFile11;
-    int handleFile12;
-    int handleFile13;
-    int handleFile14;
-    int handleFile15;
 
-    if((handleFile5 = createFile("./dir1/file5.txt")) == -1){
-        printf("\nERRROR createFile5\n");
+    printf("Path atual: %s\n", currentPath.absolute);
+    if(changeDir("./file1.txt") == -1){
+        printf("\nChange diretorio só funciona para diretorios!\n");
     }
-    //printOpenFiles();
-    if((handleFile6 = createFile("./dir1/file6.txt")) == -1){
-        printf("\nERRROR createFile6\n");
-    }
-    //printOpenFiles();
-    if((handleFile7 = createFile("./dir1/file7.txt")) == -1){
-        printf("\nERRROR createFile7\n");
-    }
-    //printOpenFiles();
-    if((handleFile8 = createFile("./dir1/file8.txt")) == -1){
-        printf("\nERRROR createFile8\n");
-    }
-    printOpenFiles();
-    if((handleFile9 = createFile("./dir1/file9.txt")) == -1){
-        printf("\nERRROR createFile9\n");
-    }
-    if((handleFile10 = createFile("./dir1/file10.txt")) == -1){
-        printf("\nERRROR createFile10\n");
-    }
-    if((handleFile11 = createFile("./dir1/file11.txt")) == -1){
-        printf("\nERRROR createFile511\n");
-    }
-    if((handleFile12 = createFile("./dir1/file12.txt")) == -1){
-        printf("\nERRROR createFile12\n");
-    }
-    if((handleFile13 = createFile("./dir1/file13.txt")) == -1){
-        printf("\nERRROR createFile13\n");
-    }
-    if((handleFile14 = createFile("./dir1/file14.txt")) == -1){
-        printf("\nERRROR createFile14\n");
-    }
-    if((handleFile15 = createFile("./dir1/file15.txt")) == -1){
-        printf("\nERRROR createFile15\n");
-    }
-    if(closeFile(handleFile13) == -1){
-        printf("\nERROR closeFile 13\n");
-    }
-    if((handleFile15 = createFile("./dir1/file15.txt")) == -1){
-        printf("\nERRROR createFile15 second time\n");
-    }
-    printf("\nMudando para o direotrio './dir1' apois a criação de 11 arquivos(file5 ... file 14)");
-    if(changeDir("./dir1") == -1){
-        printf("\nERRROR 3\n");
-    }
-
-    printf("\nFOLDERS DO DIREOTIRO DIR1, ONDE FOI CRIADO OS ARQUIVOS");
-    printFolders(currentPath.clusterNo);
-    deleteFile("./file15.txt");
-    printf("\nFOLDERS DO DIREOTIRO DIR1, ONDE FOI CRIADO OS ARQUIVOS e deletado o 15");
-    printFolders(currentPath.clusterNo);
-
-    changeDir("/");
-    openFile("link1");
-    printf("\nPRINT DA FAT\n");
-    printFAT(0);
-    printf("\nPRINT DOS ARQUIVOS ABERTOS\n");
-    printOpenFiles();
-*/
-/*
-//Teste da função getcwd2
-printf("\n\n*******TESTE PARA A FUNCAO GETCWD2");
-    char * currentPathTest = malloc(15);
-    
-    if(getcwd2(currentPathTest, 15) == -1){
-        printf("Erro tamanho insuficiente\n");
-    }
-    else
-        printf("\ncurrentPathTest: %s\n", currentPathTest);
-
-    char * currentPathTest2 = malloc(3);
-    if(getcwd2(currentPathTest2, 3) == -1){
-        printf("Erro tamanho insuficiente\n");
-    }
-    else
-        printf("\ncurrentPathTest: %s\n", currentPathTest2);
-*/
-    return 0;
+    printf("Path atual: %s\n", currentPath.absolute);
+    /*
+    Fazer o teste tentando deletar um diretorio apontado por um link
+    */
 }
