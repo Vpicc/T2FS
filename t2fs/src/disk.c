@@ -445,25 +445,30 @@ int changeDir(char * path){
     char * firstOut;
     char * secondOut;
     int clusterNewPath;
+    char *linkOutput;
+
+//Variaveis para a validação do tipo:
     int i;
     int isDir = 0;
     int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
     unsigned char* buffer = malloc(clusterByteSize);
     int clusterOfDir;
-    char *linkOutput;
-
-    //link(path, &linkOutput); // WHYYYYYYYYYYYYYYY???????????
 
     if(strlen(path) == 0){ //Se a string for vazia n altera o lugar
         return 0;
     }
     if(strcmp(path,"/") == 0){ // "/"" vai para a RAIZ
         currentPath.clusterNo = superBlock.RootDirCluster;
+        free(currentPath.absolute);
+        currentPath.absolute = malloc(sizeof(char)*2);
+        //memset(currentPath.absolute, '/0', 2);
         strcpy(currentPath.absolute,"/");
         return 0;
     }
+    //faço depois da comparação do path com vazio e "/", pq se nao tava dando segmentation..
+    link(path, &linkOutput);
 
-    if(toAbsolutePath(path, currentPath.absolute, &absolute) == -1){
+    if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute) == -1){
         free(absolute);
         return -1;
     }
@@ -603,53 +608,61 @@ int isEmptyDir(int clusterNo){
     folderContent = readDataClusterFolder(clusterNo);
     unsigned int tam=  0;
     for(i = 0; i < folderSize; i++) {
-        if(!((strcmp(folderContent[i].name, ".") == 0) || (strcmp(folderContent[i].name, "..")== 0))){
+        if(strlen(folderContent[i].name) > 0){
             tam++;
         }
     }
-    if(tam > 0){//is empty
-        return 1;
+    // 2 é pq ele só pode encontrar o . e o ..
+    if(tam > 2){//is empty
+        return 0;
     }
     else
-        return 0;
+        return 1;
 }
 int deleteDir(char * path){
     char * absolute;
     char * firstOut;
     char * secondOut;
-    char * auxCurrentPath = malloc (sizeof((strlen(currentPath.absolute))));//guarda onde estava
     unsigned int clusterDirFather;
     unsigned int clusterDir;
     int sucess = 0;
+    char *linkOutput;
+    unsigned char* bufferWithNulls = malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
+    
+    //buffer usado para a delecao
+    memset(bufferWithNulls,'\0',SECTOR_SIZE*superBlock.SectorsPerCluster);// coloca /0 em todo o buffer
 
-    strcpy(auxCurrentPath,currentPath.absolute);
+    if(strlen(path) == 0){ //Se a string for vazia n tem q deletar
+        return -1;
+    }
 
-    if(toAbsolutePath(path, currentPath.absolute, &absolute)== -1){
+    if(!isRightName(path)){ // "/", ".", ".." da erro
+        return -1;
+    }
+
+    link(path, &linkOutput); 
+
+    if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)== -1){
         return -1;
     }
     if(separatePath(absolute, &firstOut, &secondOut)==-1){//secondOut tem o nome da pasta que tem q apagar
         return -1;
     }
 
-//vai pro diretorio que quer apagar.
-    if(changeDir(path)== -1){//se o diretorio n existir n pode trocar de lugar
-        changeDir(auxCurrentPath);
-        return -1;        
-    }
-    else{
-        clusterDir = currentPath.clusterNo;
+//diretorio que quer apagar
+    if((clusterDir = pathToCluster(linkOutput)) == -1){
+        return -1;
     }
 
-    if(isEmptyDir(currentPath.clusterNo) && currentPath.clusterNo != superBlock.RootDirCluster){
-        if(changeDir("../")== -1){//volta pro diretorio pai do diretorio que quer apagar
-            changeDir(auxCurrentPath);
+    if(isEmptyDir(clusterDir) && clusterDir != superBlock.RootDirCluster){
+        //diretorio que pertence o diretorio que quer apagar
+        if((clusterDirFather = pathToCluster(firstOut)) == - 1){
             return -1;
         }
-        clusterDirFather = currentPath.clusterNo;
         int i;
         int folderSize = ( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) );
         struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
-        folderContent = readDataClusterFolder(currentPath.clusterNo);
+        folderContent = readDataClusterFolder(clusterDirFather);
         for(i = 0; i < folderSize; i++) {
             if((strcmp(folderContent[i].name, secondOut) == 0) && (folderContent[i].TypeVal == TYPEVAL_DIRETORIO)){
                     folderContent[i].TypeVal = TYPEVAL_INVALIDO;
@@ -658,24 +671,21 @@ int deleteDir(char * path){
                     folderContent[i].clustersFileSize = 0;
                     folderContent[i].firstCluster = 0;
                     writeInFAT(clusterDir, 0);
-                    writeZeroClusterFolderByName(clusterDirFather, folderContent[i], secondOut, TYPEVAL_DIRETORIO);
-                    writeZeroClusterFolderByName(clusterDir,folderContent[i],".",TYPEVAL_DIRETORIO);
-                    writeZeroClusterFolderByName(clusterDir,folderContent[i],"..",TYPEVAL_DIRETORIO);                    
+                    writeZeroClusterFolderByName(clusterDirFather, folderContent[i], secondOut, TYPEVAL_DIRETORIO);              
+                    writeCluster(clusterDir,bufferWithNulls,0,SECTOR_SIZE*superBlock.SectorsPerCluster);                    
                     sucess = 1;
             }
         }
         if(sucess){
-            changeDir(auxCurrentPath);
             return 0;
         }
         else{
-            changeDir(auxCurrentPath);
             return -1;
         }
     }
-    changeDir(auxCurrentPath);
     return -1;
 }
+
 //O fileName n pode ser path
 int writeZeroClusterFolderByName(int clusterNo, struct t2fs_record folder, char * fileName, BYTE TypeValEntrada) {
     int i;
@@ -956,6 +966,12 @@ FILE2 openFile (char * filename){
     int firstClusterOfFile;
     char *linkOutput;
 
+    int i;
+    int isFile= 0;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    int clusterOfDir;
+
     link(filename, &linkOutput); 
 
 
@@ -968,6 +984,22 @@ FILE2 openFile (char * filename){
         printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -1;
     }
+//verificação
+    clusterOfDir = pathToCluster(firstOut);
+
+    readCluster(clusterOfDir, buffer);
+    if(strlen(secondOut) > 0){
+        for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
+            if ( (strcmp((char *)buffer+i+1, secondOut) == 0) && (((BYTE) buffer[i]) == TYPEVAL_REGULAR) && !isFile ) {
+                isFile = 1;
+            } 
+        }
+        if(isFile == 0){
+            return -1;
+        }
+    }
+//fim da verificação
+
     firstClusterOfFile = pathToCluster(absolute);
 //caminho inexistente
     if(firstClusterOfFile == -1){
@@ -1030,7 +1062,6 @@ int deleteFile(char * filename){
     int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
     unsigned char* buffer = malloc(clusterByteSize);
     //
-
     memset(bufferWithNulls,'\0',SECTOR_SIZE*superBlock.SectorsPerCluster);// coloca /0 em todo o buffer
 
     if(toAbsolutePath(filename, currentPath.absolute, &absolute)){

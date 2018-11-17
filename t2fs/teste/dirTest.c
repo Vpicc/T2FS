@@ -58,7 +58,6 @@ void printFolders(int clusterNo) {
 
 int main() {
     init_disk();
-    
     printf("\n\n***************TESTE MakeDir***************\n");
 
     printf("\n*****Fazendo o direito 'abra' na Root.\n");
@@ -80,6 +79,7 @@ int main() {
         printf("\nError change ..\n");
     }
     printFAT(0);
+    printf("\n");
     printf("\n***Deletando o diretorio recem criado '/abra'\n");
     printf("\nPath atual antes da deleção: %s\n", currentPath.absolute);
     deleteDir("./abra");
@@ -136,15 +136,15 @@ int main() {
         printf("\nError change /\n");
     }
     printf("Path atual: %s\n", currentPath.absolute);
-
-    printf("\n**Deletando o abra2, que está dentro do dir1 apartir da raiz:\n");
+    printf("\n*****Deletando o abra2, que está dentro do dir1 apartir da raiz:\n");
     if(deleteDir("../dir1/abra2") == -1){
-        printf("Error na deleção");
+        printf("Error na deleção do abra2");
     }
+    printDataCluster(11);
     if(deleteDir("./file1.txt") == -1){
         printf("\nDelete Dir só remove diretorios!\n");
     }
-    printf("Path atual depois da delecao: %s\n", currentPath.absolute);
+    printf("\nPath atual depois da delecao: %s\n", currentPath.absolute);
     printf("Indo para o direito dir1\n");
     if(changeDir("../dir1") == -1){
         printf("\nError change ../dir1\n");
@@ -162,7 +162,79 @@ int main() {
         printf("\nChange diretorio só funciona para diretorios!\n");
     }
     printf("Path atual: %s\n", currentPath.absolute);
-    /*
-    Fazer o teste tentando deletar um diretorio apontado por um link
-    */
+/*
+Fazer o teste tentando deletar um diretorio apontado por um link
+*/
+   printFolders(currentPath.clusterNo);
+   printf("*****TESTANDO CRIAR UM LINK*********");
+   if(ln2("./link2", "dir1") == -1){
+       printf("ERRO NA CRIACAO DO LINK2");
+   }
+   printf("\nPRINT DO DIRETORIO RAIZ ONDE FOI CRIADO O LINK2");
+   printFolders(currentPath.clusterNo);
+   printf("\n*****");
+   printf("\nOq tem no arquivo do link2: ");
+   printDataCluster(11);
+   printFAT(0);
+   if(deleteDir("./link2") == -1){
+       printf("\nEsse diretorio nao esta vazio\n");
+   }
+   printFAT(0);
+   printf("\nDANDO UM CHANGE DIR PARA O DIRETORIO APONTANDO PELO LINK2");
+   if(changeDir("./link2") == -1){
+       printf("\nERRO NO CHANGE DIR LINK2");
+   }
+   printf("\nPath atual: %s\n", currentPath.absolute);
+   printf("\nCRIANDO UM DIRETORIO ABRA NO DIRETORIO DIR1");
+   if(mkdir2("/dir1/abrameu") == -1){
+       printf("erro na criação");
+   }
+   printf("\nPRINT DO DIRETORIO 1 ONDE FOI CRIADO O ABRA\n");
+   printFolders(currentPath.clusterNo);
+   if(changeDir("/") == -1){
+       printf("ERRO NA CHANGE PARA '/'");
+   }
+   printf("\nPath atual: %s\n", currentPath.absolute);
+   printf("\nCRIANDO UM LINK APONTANDO PARA O ABRAMEU QUE ESTA DENTRO DO DIR1");
+   if(ln2("./link3", "dir1/abrameu") == -1){
+       printf("ERRO NA CRIACAO DO LINK3");
+   }
+   printf("\nPRINT DO DIRETORIO RAIZ ONDE FOI CRIADO O LINK3\n");
+   printFolders(currentPath.clusterNo);
+
+   if(changeDir("link3") == -1){
+       printf("\nERRO NO CHANGE LINK3");
+   }
+   printf("\nPath atual: %s\n", currentPath.absolute);
+   printf("\nPRINT DO DIRETORIO ONDE APONTA O LINK3, o ABRAMEU\n");
+   printFolders(currentPath.clusterNo);
+
+   if(changeDir("/dir1") == -1){
+       printf("\nERRO NO CHANGE DIR 1 ");
+   }
+   printf("\nPath atual: %s\n", currentPath.absolute);
+   printf("\nPRINT DO DIRETORIO 1\n");
+   printFolders(currentPath.clusterNo);
+
+   printf("\nPath atual: %s\n", currentPath.absolute);
+   printf("\nPRINT DO DIRETORIO 1\n");
+   printFolders(currentPath.clusterNo);
+   if(deleteDir("../link3") == -1){
+       printf("ERRO NO DELETE DIR ../LINK3");
+   }
+   printf("\nDELECAO DO LINK3 QUE APONTA PARA UM DIRETORIO\n");
+   printf("\nPath atual: %s\n", currentPath.absolute);
+   printFolders(currentPath.clusterNo);
+
+   if(deleteDir(".") == -1){
+       printf("\nERROR: Nao pode deletar o diretorio .");
+   }
+   if(deleteDir("..") == -1){
+       printf("\nERROR: Nao pode deletar o diretorio ..");
+   }
+
+   if(deleteDir("/") == -1){
+       printf("ERROR: Nao pode deletar o diretorio raiz\n");
+   }
+
 }

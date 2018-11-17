@@ -127,7 +127,7 @@ int main() {
     printf("\nFOLDERS DO DIREOTIRO DIR1, ONDE FOI CRIADO OS ARQUIVOS e deletado o 15");
     printFolders(currentPath.clusterNo);
 
-    changeDir("/");
+    changeDir("/");//Se colocar "/" aqui também está dando segmentation
     openFile("link1");
     printf("\nPRINT DA FAT\n");
     printFAT(0);
