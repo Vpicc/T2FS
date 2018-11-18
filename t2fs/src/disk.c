@@ -962,10 +962,7 @@ FILE2 createFile(char * filename){
 //se ja tiver um arquivo com esse nome nesse diretorio
 //TODO: TEM Q APGAR O TEM E COLOCAR O NOVO.
     if(isInCluster(clusterToRecordFile, secondOut, TYPEVAL_REGULAR)){
-        free(absolute);
-        free(firstOut);
-        free(secondOut);
-        return -1;
+        deleteFile(filename);
     }
 
 //se n achar um cluster livre na fat
@@ -1677,7 +1674,7 @@ int updateFileSize(FILE2 handle,DWORD newFileSize){
 
     //fprintf(stderr,"\n\nBUFFER: %s\n\n",buffer);
     writeCluster(openFiles[fileNo].clusterDir,buffer,count,sizeof(struct t2fs_record));
-    
+
 return 0;      
 }
 
