@@ -104,6 +104,10 @@ int updateFileSize(FILE2 handle,DWORD newFileSize);
 
 int setRealDealFileSizeOfChaos(FILE2 handle);
 
+int realFileSize (FILE2 handle);
+
+DWORD getTypeVal(char *absolute);
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;

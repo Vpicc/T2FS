@@ -78,14 +78,27 @@ for(i=0;i<5;i++){
 }
 openFile1=openFile("/file2.txt");
 printOpenFiles();
-seek2(openFile1, (DWORD)1090);
 saida =writeFile(openFile1,buffer,20);
 if(saida != 0)
     fprintf(stderr,"\n\nSAIDA WRITE: %d\n\n",saida);
-closedir2(openD);
+
 seek2(openFile1,0);
-read2(openFile1,bufferout,3000);
-    fprintf(stderr,"\n\n%s\n\n",bufferout);
+saida=read2(openFile1,bufferout,3000);
+    fprintf(stderr,"\n\nNUMERO DE CARACTERES LIDOS:%d\tFILE 2:%s\n\n",saida,bufferout);
+openD=opendir2("/");
+for(i=0;i<5;i++){
+    if(readdir2(openD,&direntry)==-1)
+        fprintf(stderr,"Erro ao ler diretorio\n\n");
+    else{
+        fprintf(stderr,"First entry name: %s\n",direntry.name);
+        fprintf(stderr,"First entry fileType: %x\n",direntry.fileType);
+        fprintf(stderr,"First entry size: %x\n\n",direntry.fileSize);
+    }
+}
+seek2(openFile1,0);
+saida=read2(openFile1,bufferout,3000);
+fprintf(stderr,"\n\nNUMERO DE CARACTERES LIDOS:%d\tFILE 2:%s\n\n",saida,bufferout);
+closedir2(openD);
 openD=opendir2("/");
 for(i=0;i<5;i++){
     if(readdir2(openD,&direntry)==-1)

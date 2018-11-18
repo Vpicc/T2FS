@@ -68,7 +68,7 @@ int saida;
 
 fprintf(stderr,"RETURN do INIT:%d",init_disk());
 
-openD=opendir2("/");
+openD=opendir2("/file1.txt");
 fprintf(stderr,"handle :%d",openD);
 printOpenDirectories();
 
@@ -78,7 +78,6 @@ closedir2(openD);
 printOpenDirectories();
 openD=opendir2("/dir1");
 printOpenDirectories();
-
 
 for(i=0;i<10;i++){
     if(readdir2(openD,&direntry)==-1)
@@ -91,12 +90,27 @@ for(i=0;i<10;i++){
 }
 openFile1=open2("/file1.txt");
 
+    saida=realFileSize(openFile1);
+    if(saida < 0)
+        fprintf(stderr,"ERRO NO REALFILESIZE: %d",saida);
+    else
+        fprintf(stderr,"\n\nREALFILESIZE: %d\n\n",saida);
+
     fprintf(stderr,"LENDO ARQUIVO /file1.txt com o handle %d\n\n", openFile1);
     saida=read2(openFile1,buffer,99);
     fprintf(stderr,"Retorno do read:%d\n\n",saida);
     fprintf(stderr,"%s\n",buffer);
 
     openFile2=open2("/file2.txt");
+
+
+    saida=realFileSize(openFile2);
+
+    if(saida < 0)
+        fprintf(stderr,"ERRO NO REALFILESIZE: %d",saida);
+    else
+        fprintf(stderr,"\n\nsREALFILESIZE: %d\n\n",saida);
+
 
     fprintf(stderr,"LENDO ARQUIVO /file2.txt com o handle %d\n\n", openFile2);
     saida=read2(openFile2,buffer,1200);
