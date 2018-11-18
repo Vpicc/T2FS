@@ -38,7 +38,10 @@ Saï¿½da:	Se a operacao foi realizada com sucesso, a funcao retorna o handle do a
 	Em caso de erro, deve ser retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 FILE2 create2 (char *filename) {
-    return -1;
+	init_disk();
+	if(strcmp(filename,"") ==0 || strcmp(filename,"/") ==0 )
+		return -1;
+	return createFile(filename);
 }
 
 
@@ -53,7 +56,10 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 	Em caso de erro, serï¿½ retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int delete2 (char *filename) {
-    return -1;
+	init_disk();
+	if(strcmp(filename,"") ==0 || strcmp(filename,"/") ==0 )
+		return -1;
+    return deleteFile(filename);
 }
 
 
@@ -73,7 +79,10 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna o han
 	Em caso de erro, deve ser retornado um valor negativo
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
-    return -1;
+	init_disk();
+	if(strcmp(filename,"") ==0 || strcmp(filename,"/") ==0)
+		return -1;
+    return openFile(filename);
 }
 
 
@@ -87,7 +96,10 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 	Em caso de erro, serï¿½ retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int close2 (FILE2 handle) {
-    return -1;
+	init_disk();
+	if(handle < 0)
+	 	return -1;
+    return closeFile(handle);
 }
 
 
@@ -106,7 +118,10 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna o nï¿
 	Em caso de erro, serï¿½ retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 int read2 (FILE2 handle, char *buffer, int size) {
-    return -1;
+	init_disk();
+	if(handle < 0)
+	 	return -1;
+	return readFile(handle,buffer,size);
 }
 
 
@@ -124,7 +139,15 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna o nï¿
 	Em caso de erro, serï¿½ retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 int write2 (FILE2 handle, char *buffer, int size) {
-    return -1;
+	init_disk();
+	int bytesWritten;
+
+	if(handle < 0)
+	 	return -1;
+	bytesWritten = writeFile(handle,buffer,size);
+
+	//TODO: MODIFICAR SIZEOFFILE
+    return bytesWritten;
 }
 
 
@@ -141,7 +164,16 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 	Em caso de erro, serï¿½ retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int truncate2 (FILE2 handle) {
-    return -1;
+	init_disk();
+	int functionReturn;
+
+	if(handle < 0)
+	 	return -1;
+	functionReturn = truncateFile(handle);
+	
+	//TODO: MODIFICAR SIZEOFFILE
+	//TODO: MODIFICAR NUMERO DE CLUSTERS
+    return functionReturn;
 }
 
 
@@ -160,7 +192,10 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 	Em caso de erro, serï¿½ retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int seek2 (FILE2 handle, DWORD offset) {
-    return -1;
+	init_disk();
+	if(handle < 0)
+		return -1;
+    return moveCursor (handle, offset);
 }
 
 
@@ -178,6 +213,9 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 	Em caso de erro, serï¿½ retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int mkdir2 (char *pathname) {
+	init_disk();
+	if(strcmp(pathname,"") ==0 )
+		return -1;
     return mkdir(pathname);
 }
 
@@ -199,6 +237,9 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 	Em caso de erro, serï¿½ retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int rmdir2 (char *pathname) {
+	init_disk();
+	if(strcmp(pathname,"") ==0  || strcmp(pathname,"/") ==0)
+		return -1;
     return deleteDir(pathname);
 }
 
@@ -217,34 +258,10 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 		Em caso de erro, serï¿½ retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
-    return changeDir(pathname);
-}
-
-
-
-/*-----------------------------------------------------------------------------
-Funï¿½ï¿½o:	Informa o diretï¿½rio atual de trabalho.
-		O "pathname" do diretï¿½rio de trabalho deve ser copiado para o buffer indicado por "pathname".
-			Essa cï¿½pia nï¿½o pode exceder o tamanho do buffer, informado pelo parï¿½metro "size".
-		Sï¿½o considerados erros:
-			(a) quaisquer situaï¿½ï¿½es que impeï¿½am a realizaï¿½ï¿½o da operaï¿½ï¿½o
-			(b) espaï¿½o insuficiente no buffer "pathname", cujo tamanho estï¿½ informado por "size".
-
-Entra:	pathname -> buffer para onde copiar o pathname do diretï¿½rio de trabalho
-		size -> tamanho do buffer pathname
-
-Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (zero).
-		Em caso de erro, serï¿½ retornado um valor diferente de zero.
------------------------------------------------------------------------------*/
-int getcwd2 (char *pathname, int size) {
-	if(strlen(currentPath.absolute) > size){
+	init_disk();
+	if(strcmp(pathname,"") ==0)
 		return -1;
-	}
-	else{
-		memset(pathname,'\0',strlen(pathname));
-		strcpy(pathname, currentPath.absolute);
-		return 0;
-	}
+	return changeDir(pathname);
 }
 
 
@@ -263,7 +280,9 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna o ide
 	Em caso de erro, serï¿½ retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 DIR2 opendir2 (char *pathname) {
-
+	init_disk();
+	if(strcmp(pathname,"") ==0 )
+		return -1;
 	return openDir(pathname);
 }
 
@@ -285,11 +304,15 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 	Em caso de erro, serï¿½ retornado um valor diferente de zero ( e "dentry" nï¿½o serï¿½ vï¿½lido)
 -----------------------------------------------------------------------------*/
 int readdir2 (DIR2 handle, DIRENT2 *dentry) {
+	init_disk();
+
+	if(handle < 0)
+	 	return -1;
 
 	DIRENT2 diretoryentry;
 	diretoryentry=searchDirByHandle(handle);
 	*dentry=diretoryentry;
-	if(strcmp(diretoryentry.name,"")==0)
+	if(strcmp(diretoryentry.name,"") == 0)
 		return -1;
 	
 	return 0;
@@ -306,6 +329,9 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 	Em caso de erro, serï¿½ retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int closedir2 (DIR2 handle) {
+	init_disk();
+	if(handle < 0)
+		return -1;
     return closeDir(handle);
 }
 
@@ -321,6 +347,9 @@ Saï¿½da:	Se a operaï¿½ï¿½o foi realizada com sucesso, a funï¿½ï¿½o retorna "0" (
 	Em caso de erro, serï¿½ retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int ln2(char *linkname, char *filename) {
-    return -1;
+	init_disk();
+	if(strcmp(filename,"") ==0 ||strcmp(linkname,"") ==0)
+		return -1;
+    return createSoftlink(linkname,filename);
 }
 

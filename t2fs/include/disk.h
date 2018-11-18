@@ -6,6 +6,8 @@
 
 #define BAD_SECTOR 0xFFFFFFFE
 
+#define MAX_NUM_FILES 10
+
 struct t2fs_superbloco superBlock;
 
 DWORD convertToDword(unsigned char* buffer);
@@ -70,10 +72,47 @@ int closeDir(DIR2 handle);
 
 int link(char * path, char ** output);
 
+int truncateCluster(int clusterNo, int position);
+
+int truncateFile(FILE2 handle);
+
+FILE2 createFile(char * filename);
+
+int deleteFile(char * filename);
+
+int makeAnewHandle();
+
+void printOpenFiles();
+
+FILE2 openFile (char * filename);
+
+int createSoftlink(char *linkname,char *filename);
+
+int readFile (FILE2 handle, char *buffer, int size);
+
+int moveCursor (FILE2 handle, DWORD offset);
+
+int sizeOfFile(int clusterDir, int clusterFile);
+
+int writeFile(FILE2 handle, char * buffer, int size);
+
+int closeFile(FILE2 handle);
+
+int closeFileByFristCluster(int clusterToClose);
+
+int updateFileSize(FILE2 handle,DWORD newFileSize);
+
+int setRealDealFileSizeOfChaos(FILE2 handle);
+
+int realFileSize (FILE2 handle);
+
+DWORD getTypeVal(char *absolute);
+
 typedef struct diskf {
     FILE2 file;
     int currPointer;
-    char name[51];
+    int clusterNo;
+    int clusterDir;
 } DISK_FILE;
 
 typedef struct currp {
@@ -86,8 +125,10 @@ CURRENT_PATH currentPath;
 typedef struct diskd {
     DIR2 handle;
     int noReads;
-    struct currp path;
+    int clusterDir;
     DIRENT2 directory;
 } DISK_DIR;
+
+DISK_FILE openFiles[10];
 
 #endif

@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../include/disk.h"
+#include "../include/t2fs.h"
 #include "../include/apidisk.h"
 
 //gcc -o testePath testPath.c ../src/disk.c ../lib/apidisk.o -Wall -ggdb && ./testePath
-//gcc -m32 -o testePath testPath.c ../src/disk.c ../lib/apidisk.o -Wall -ggdb && ./testePath
+//gcc -m32 -o testePath testPath.c ../src/disk.c ../src/t2fs.c ../lib/apidisk.o -Wall -ggdb && ./testePath
 
 void printFAT(int sector) {
     int j;
@@ -125,36 +126,36 @@ int main() {
     printf("\n\nSaida Dois: %s\nTamanho da saida dois: %d", saidaDois, strlen(saidaDois));
     printf("\n");
 
-    printf("\n***************TESTE ChangeDir***************");
+    printf("\n***************TESTE chdir2***************");
 
     printf("\nDiretorio atual: %s\n", currentPath.absolute);
-
-    changeDir("./dir1/file1.txt");
-    printf("\nAlterando para:'./dir1/file1.txt'\n");
+    int mediz;
+    mediz=chdir2("./dir1/file1.txt");
+    printf("\nAlterando para:'./dir1/file1.txt' %d\n",mediz);
     printf("Diretorio alterado: %s\nCluster atual: %d\n", currentPath.absolute, currentPath.clusterNo);
     
     printf("\nAlterando para:'.././aa/b/../cb'\n");    
-    changeDir(".././aa/b/../cb");
+    chdir2(".././aa/b/../cb");
     printf("Diretorio alterado, porem inexistente: %s\n", currentPath.absolute);
 
     printf("\nVoltando para o raiz:\n");
-    changeDir("../../");
+    chdir2("../../");
     printf("Diretorio alterado de volta para a raiz: %s\nCluster atual: %d\n", currentPath.absolute, currentPath.clusterNo);
 
     printf("\n\n***************TESTE MakeDir***************\n");
 
     printf("\n*****Fazendo o direito 'abra' na Root.\n");
-    mkdir("../abra");
+    mkdir2("../abra");
     printf("***Folders da ROOT:\n");
     printFolders(2);
     printf("\n***Mudando para o diretorio recem criado '/abra'\n");
-    changeDir("/abra");
+    chdir2("/abra");
     printf("Folders do direitorio '/abra':\n");
     printFolders(currentPath.clusterNo);
-    changeDir("../");
+    chdir2("../");
     printf("\n***Deletando o diretorio recem criado '/abra'\n");
     printFAT(0);
-    deleteDir("./abra");
+    rmdir2("./abra");
     printf("***Folders da ROOT:\n");
     printFolders(currentPath.clusterNo);
     printf("***Folde do diretorio que foi deletado '/abra':\n");
@@ -162,26 +163,26 @@ int main() {
     printFAT(0);
 
     printf("\n\n*****Fazendo o direito 'abra2' na Dir1.\n");
-    mkdir("../dir1/abra2");
-    changeDir("../dir1");
+    mkdir2("../dir1/abra2");
+    chdir2("../dir1");
     printf("\n**Folders do diretorio '/dir1':");
     printFolders(currentPath.clusterNo);
     printf("\n\n**Folders do direitorio Abra2 criado no /dir1:");
-    changeDir("./abra2");
+    chdir2("./abra2");
     printFolders(currentPath.clusterNo);
 
     printf("\n\n\n**Criando um Diretorio 'abra3' na Raiz:\n");
-    mkdir("../../abra3");
+    mkdir2("../../abra3");
     printf("\n**Folders da raiz:");
-    changeDir("../../");
+    chdir2("../../");
     printFolders(currentPath.clusterNo);
     printf("\n**Folders do direitorio Abra3:");
-    changeDir("./abra3");
+    chdir2("./abra3");
     printFolders(currentPath.clusterNo);
-    changeDir("../");
+    chdir2("../");
 
     printf("\n\n***Deletando o diretorio recem criado '/abra3 da Raiz'\n");
-    deleteDir("./abra3");
+    rmdir2("./abra3");
     printf("\n***Folders da Raiz:\n");
     printFolders(currentPath.clusterNo);
 
