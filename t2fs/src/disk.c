@@ -918,12 +918,12 @@ FILE2 createFile(char * filename){
             return -1; 
 
     if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)){
-        printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        //printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -1;
     }
 
     if(separatePath(absolute, &firstOut, &secondOut)){
-        printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        //printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -1;
     }
 
@@ -1026,12 +1026,12 @@ FILE2 openFile (char * filename){
             return -1; 
 
     if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)){
-        printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        //printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -2;
     }
 
     if(separatePath(absolute, &firstOut, &secondOut)){
-        printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        //printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -2;
     }
 
@@ -1121,7 +1121,7 @@ int deleteFile(char * filename){
     memset(bufferWithNulls,'\0',SECTOR_SIZE*superBlock.SectorsPerCluster);// coloca /0 em todo o buffer
 
     if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
-        printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        //printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
         free(absolute);
         free(firstOut);
         free(secondOut);
@@ -1129,7 +1129,7 @@ int deleteFile(char * filename){
     }
 
     if(separatePath(absolute, &firstOut, &secondOut)){
-        printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
+        //printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
         free(absolute);
         free(firstOut);
         free(secondOut);
