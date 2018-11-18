@@ -136,6 +136,10 @@ fprintf(stderr,"HANDLE DO FILE 1: %d", openFile1);
     fprintf(stderr,"%s\n",buffer);
     
     printOpenFiles();
+
+fprintf(stderr,"DEVE DAR ERRO: %d",open2("/"));
+    printOpenFiles();
+
 return 0;
 
 }

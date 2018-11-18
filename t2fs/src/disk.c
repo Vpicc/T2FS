@@ -466,15 +466,18 @@ int changeDir(char * path){
         return 0;
     }
     //faço depois da comparação do path com vazio e "/", pq se nao tava dando segmentation..
-    link(path, &linkOutput);
+
+        if(link(path, &linkOutput) == -1)
+            return -1;
 
     if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute) == -1){
+
         free(absolute);
         return -1;
     }
 
     if(separatePath(absolute, &firstOut, &secondOut) == -1){
-        return -1;
+        return -2;
     }
 
     clusterOfDir = pathToCluster(firstOut);
@@ -483,11 +486,11 @@ int changeDir(char * path){
     if(strlen(secondOut) > 0){
         for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
             if ( (strcmp((char *)buffer+i+1, secondOut) == 0) && (((BYTE) buffer[i]) == TYPEVAL_DIRETORIO) && !isDir ) {
-                isDir = 1;
+                isDir = 4;
             } 
         }
         if(isDir == 0){
-            return -1;
+            return -3;
         }
     }
 //se o absoluto do atual com o path for /, então é pq é o ROOT.
@@ -500,7 +503,7 @@ int changeDir(char * path){
 
     if(clusterNewPath == -1){//se o pathname n existir
         free(absolute);
-        return -1;
+        return -5;
     }
 
     free(currentPath.absolute);
@@ -637,7 +640,8 @@ int deleteDir(char * path){
     }
 
 
-    link(path, &linkOutput); 
+    if(link(path, &linkOutput)== -1)
+            return -1; 
 
     if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)== -1){
         return -1;
@@ -835,6 +839,8 @@ DIR2 openDir(char *path){
         strcpy(absolute,"/");
     }else{
         retornoLink=link(path, &linkOutput);
+        if(retornoLink == -1)
+            return -1; 
         if(retornoLink < 0){
             return -4;
         }else if(retornoLink ==1){
@@ -908,8 +914,8 @@ FILE2 createFile(char * filename){
     char *linkOutput;
     
 
-    link(filename, &linkOutput); 
-
+    if(link(filename, &linkOutput)== -1)
+            return -1; 
 
     if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)){
         printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
@@ -1017,8 +1023,8 @@ FILE2 openFile (char * filename){
     unsigned char* buffer = malloc(clusterByteSize);
     int clusterOfDir;
 
-    link(filename, &linkOutput); 
-
+    if(link(filename, &linkOutput)== -1)
+            return -1; 
 
     if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)){
         printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
@@ -1106,6 +1112,8 @@ int deleteFile(char * filename){
     unsigned char* buffer = malloc(clusterByteSize);
     //
 
+    if(link(filename, &linkOutput)== -1)
+            return -1; 
 
     if(link(filename, &linkOutput)== 1){
         typeToDelete = TYPEVAL_LINK;
