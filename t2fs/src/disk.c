@@ -636,9 +636,6 @@ int deleteDir(char * path){
         return -1;
     }
 
-    if(!isRightName(path)){ // "/", ".", ".." da erro
-        return -1;
-    }
 
     link(path, &linkOutput); 
 
@@ -646,6 +643,9 @@ int deleteDir(char * path){
         return -1;
     }
     if(separatePath(absolute, &firstOut, &secondOut)==-1){//secondOut tem o nome da pasta que tem q apagar
+        return -1;
+    }
+    if(!isRightName(secondOut)){ // "/", ".", ".." da erro
         return -1;
     }
 
@@ -907,9 +907,6 @@ FILE2 createFile(char * filename){
     int clusterToRecordFile;
     char *linkOutput;
     
-    if(!isRightName(filename)){
-        return -1;
-    }  
 
     link(filename, &linkOutput); 
 
@@ -923,6 +920,11 @@ FILE2 createFile(char * filename){
         printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
         return -1;
     }
+
+    if(!isRightName(secondOut)){
+        return -1;
+    }  
+
     clusterToRecordFile = pathToCluster(firstOut);
 //caminho inexistente
     if(clusterToRecordFile == -1){
@@ -1015,22 +1017,22 @@ FILE2 openFile (char * filename){
     unsigned char* buffer = malloc(clusterByteSize);
     int clusterOfDir;
 
-    if(!isRightName(filename)){
-        return -1;
-    }  
-
     link(filename, &linkOutput); 
 
 
     if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute)){
         printf("\nERRO INESPERADO\n");//se der erro aqui eu n sei pq, tem q ver ainda
-        return -1;
+        return -2;
     }
 
     if(separatePath(absolute, &firstOut, &secondOut)){
         printf("\nERRO INESPERADo\n");//se der erro aqui eu n sei pq, tem q ver ainda
-        return -1;
+        return -2;
     }
+
+    if(!isRightName(secondOut)){ 
+        return -1;
+    }  
 //verificação
     clusterOfDir = pathToCluster(firstOut);
 
@@ -1042,7 +1044,7 @@ FILE2 openFile (char * filename){
             } 
         }
         if(isFile == 0){
-            return -1;
+            return -3;
         }
     }
 //fim da verificação
@@ -1050,14 +1052,14 @@ FILE2 openFile (char * filename){
     firstClusterOfFile = pathToCluster(absolute);
 //caminho inexistente
     if(firstClusterOfFile == -1){
-        return -1;
+        return -4;
     }
 //n tinha espaço para adicionar um novo arquivos
     if(handle == -1){
         free(absolute);
         free(firstOut);
         free(secondOut);
-        return -1; 
+        return -5; 
     }
     struct diskf newFileToRecord;
    
@@ -1104,10 +1106,6 @@ int deleteFile(char * filename){
     unsigned char* buffer = malloc(clusterByteSize);
     //
 
-    if(!isRightName(filename)){
-        return -1;
-    }  
-
 
     if(link(filename, &linkOutput)== 1){
         typeToDelete = TYPEVAL_LINK;
@@ -1130,6 +1128,10 @@ int deleteFile(char * filename){
         free(secondOut);
         return -1;
     }
+
+    if(!isRightName(secondOut)){
+        return -1;
+    }  
 
     if((clusterOfDir = pathToCluster(firstOut)) == -1){
         free(absolute);

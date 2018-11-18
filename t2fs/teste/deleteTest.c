@@ -84,4 +84,6 @@ int main() {
     printf("\nDataCluster 9 depois da delecao:\n");    
     printDataCluster(9);
     printFAT(0);
+    
+    return 0;
 }

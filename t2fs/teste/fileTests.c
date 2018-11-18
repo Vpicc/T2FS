@@ -141,4 +141,5 @@ int main() {
     printf("\nPRINT DOS ARQUIVOS ABERTOS\n");
     printOpenFiles();
 
+    return 0;
 }

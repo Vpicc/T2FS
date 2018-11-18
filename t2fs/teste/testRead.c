@@ -76,7 +76,7 @@ openD1=opendir2("/dir1");
 printOpenDirectories();
 closedir2(openD);
 printOpenDirectories();
-openD=opendir2("/dir1");
+openD=opendir2("/");
 printOpenDirectories();
 
 for(i=0;i<10;i++){
@@ -89,6 +89,8 @@ for(i=0;i<10;i++){
     }
 }
 openFile1=open2("/file1.txt");
+
+fprintf(stderr,"HANDLE DO FILE 1: %d", openFile1);
 
     saida=realFileSize(openFile1);
     if(saida < 0)
