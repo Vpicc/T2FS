@@ -906,6 +906,10 @@ FILE2 createFile(char * filename){
     handle = makeAnewHandle();
     int clusterToRecordFile;
     char *linkOutput;
+    
+    if(!isRightName(filename)){
+        return -1;
+    }  
 
     link(filename, &linkOutput); 
 
@@ -1011,6 +1015,10 @@ FILE2 openFile (char * filename){
     unsigned char* buffer = malloc(clusterByteSize);
     int clusterOfDir;
 
+    if(!isRightName(filename)){
+        return -1;
+    }  
+
     link(filename, &linkOutput); 
 
 
@@ -1089,18 +1097,22 @@ int deleteFile(char * filename){
     DWORD FATrepresentation = 0;
     BYTE typeToDelete = TYPEVAL_REGULAR;
     char *linkOutput;
-
-    int aux = link(filename, &linkOutput); 
-
-    if(aux == 1){
-        typeToDelete = TYPEVAL_LINK;
-    }
     //variaveis para a verificação
     int i;
     int isFile = 0;
     int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
     unsigned char* buffer = malloc(clusterByteSize);
     //
+
+    if(!isRightName(filename)){
+        return -1;
+    }  
+
+
+    if(link(filename, &linkOutput)== 1){
+        typeToDelete = TYPEVAL_LINK;
+    }
+
     memset(bufferWithNulls,'\0',SECTOR_SIZE*superBlock.SectorsPerCluster);// coloca /0 em todo o buffer
 
     if(toAbsolutePath(filename, currentPath.absolute, &absolute)){
