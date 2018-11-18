@@ -7,3 +7,6 @@ t2fs/teste/testePath
 t2fs/teste/testeWrite
 t2fs/teste/testeRead
 t2fs/teste/t2fs_disk.dat
+t2fs/teste/testeApi
+t2fs/teste/testeSizing
+t2fs/teste/testeSoft
