@@ -129,9 +129,9 @@ int main() {
     printf("\n***************TESTE chdir2***************");
 
     printf("\nDiretorio atual: %s\n", currentPath.absolute);
-
-    chdir2("./dir1/file1.txt");
-    printf("\nAlterando para:'./dir1/file1.txt'\n");
+    int mediz;
+    mediz=chdir2("./dir1/file1.txt");
+    printf("\nAlterando para:'./dir1/file1.txt' %d\n",mediz);
     printf("Diretorio alterado: %s\nCluster atual: %d\n", currentPath.absolute, currentPath.clusterNo);
     
     printf("\nAlterando para:'.././aa/b/../cb'\n");    

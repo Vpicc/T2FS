@@ -39,7 +39,7 @@ Sa�da:	Se a operacao foi realizada com sucesso, a funcao retorna o handle do a
 -----------------------------------------------------------------------------*/
 FILE2 create2 (char *filename) {
 	init_disk();
-	if(strcmp(filename,"") ==0 )
+	if(strcmp(filename,"") ==0 || strcmp(filename,"/") ==0 )
 		return -1;
 	return createFile(filename);
 }
@@ -57,7 +57,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 -----------------------------------------------------------------------------*/
 int delete2 (char *filename) {
 	init_disk();
-	if(strcmp(filename,"") ==0 )
+	if(strcmp(filename,"") ==0 || strcmp(filename,"/") ==0 )
 		return -1;
     return deleteFile(filename);
 }
@@ -80,7 +80,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o han
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
 	init_disk();
-	if(strcmp(filename,"") ==0 )
+	if(strcmp(filename,"") ==0 || strcmp(filename,"/") ==0)
 		return -1;
     return openFile(filename);
 }
@@ -238,7 +238,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 -----------------------------------------------------------------------------*/
 int rmdir2 (char *pathname) {
 	init_disk();
-	if(strcmp(pathname,"") ==0 )
+	if(strcmp(pathname,"") ==0  || strcmp(pathname,"/") ==0)
 		return -1;
     return deleteDir(pathname);
 }
@@ -259,7 +259,7 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
 	init_disk();
-	if(strcmp(pathname,"") ==0 )
+	if(strcmp(pathname,"") ==0)
 		return -1;
 	return changeDir(pathname);
 }
