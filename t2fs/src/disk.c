@@ -1242,10 +1242,13 @@ int link(char * path, char ** output) {
     char * fileName;
     int pathClusterNo;
     int linkClusterNo;
+
+
     toAbsolutePath(path, currentPath.absolute, &absolute);
+
     //printf("\nAboslute: %s", absolute);
     separatePath(absolute, &pathToFile, &fileName);
-    
+
     pathClusterNo = pathToCluster(pathToFile);
 
     if(pathClusterNo == -1) {
@@ -1503,10 +1506,10 @@ int readFile (FILE2 handle, char *buffer, int size){ //IN PROGRESS
     //le o cluster atual
     prebuffer=readDataCluster(currentCluster);
 
-    while((DWORD)currentCluster != END_OF_FILE && i<size){
+    while((DWORD)currentCluster != END_OF_FILE && i<size && (DWORD)currentCluster != BAD_SECTOR){
 
         //percorre o buffer até achar o final do arquivo ou do cluster, transferindo os dados para saida
-        while(prebuffer[i-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && prebuffer[currentPointerInCluster-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && currentPointerInCluster < SECTOR_SIZE*superBlock.SectorsPerCluster && i<size){
+        while(currentPointerInCluster < SECTOR_SIZE*superBlock.SectorsPerCluster  && prebuffer[currentPointerInCluster] != '\0' && i<size){
             buffer[i]=(unsigned char)prebuffer[currentPointerInCluster];
             //fprintf(stderr,"\n%d - %c:%c",i,prebuffer[i],buffer[i]);
             currentPointerInCluster++;
