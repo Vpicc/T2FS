@@ -38,6 +38,9 @@ Sa�da:	Se a operacao foi realizada com sucesso, a funcao retorna o handle do a
 	Em caso de erro, deve ser retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 FILE2 create2 (char *filename) {
+	init_disk();
+	if(strcmp(filename,"") ==0 )
+		return -1;
 	return createFile(filename);
 }
 
@@ -53,6 +56,9 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int delete2 (char *filename) {
+	init_disk();
+	if(strcmp(filename,"") ==0 )
+		return -1;
     return deleteFile(filename);
 }
 
@@ -73,6 +79,9 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o han
 	Em caso de erro, deve ser retornado um valor negativo
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
+	init_disk();
+	if(strcmp(filename,"") ==0 )
+		return -1;
     return openFile(filename);
 }
 
@@ -87,6 +96,9 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int close2 (FILE2 handle) {
+	init_disk();
+	if(handle < 0)
+	 	return -1;
     return closeFile(handle);
 }
 
@@ -106,6 +118,9 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o n�
 	Em caso de erro, ser� retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 int read2 (FILE2 handle, char *buffer, int size) {
+	init_disk();
+	if(handle < 0)
+	 	return -1;
 	return readFile(handle,buffer,size);
 }
 
@@ -124,8 +139,11 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o n�
 	Em caso de erro, ser� retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 int write2 (FILE2 handle, char *buffer, int size) {
+	init_disk();
 	int bytesWritten;
 
+	if(handle < 0)
+	 	return -1;
 	bytesWritten = writeFile(handle,buffer,size);
 
 	//TODO: MODIFICAR SIZEOFFILE
@@ -146,8 +164,11 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int truncate2 (FILE2 handle) {
+	init_disk();
 	int functionReturn;
 
+	if(handle < 0)
+	 	return -1;
 	functionReturn = truncateFile(handle);
 	
 	//TODO: MODIFICAR SIZEOFFILE
@@ -171,7 +192,10 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int seek2 (FILE2 handle, DWORD offset) {
-     return moveCursor (handle, offset);
+	init_disk();
+	if(handle < 0)
+		return -1;
+    return moveCursor (handle, offset);
 }
 
 
@@ -189,6 +213,9 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int mkdir2 (char *pathname) {
+	init_disk();
+	if(strcmp(pathname,"") ==0 )
+		return -1;
     return mkdir(pathname);
 }
 
@@ -210,6 +237,9 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int rmdir2 (char *pathname) {
+	init_disk();
+	if(strcmp(pathname,"") ==0 )
+		return -1;
     return deleteDir(pathname);
 }
 
@@ -228,104 +258,10 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 		Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
-    
-    char * absolute;
-    char * firstOut;
-    char * secondOut;
-    int clusterNewPath;
-    char *linkOutput;
-
-//Variaveis para a validação do tipo:
-    int i;
-    int isDir = 0;
-    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
-    unsigned char* buffer = malloc(clusterByteSize);
-    int clusterOfDir;
-
-    if(strlen(pathname) == 0){ //Se a string for vazia n altera o lugar
-        return 0;
-    }
-    if(strcmp(pathname,"/") == 0){ // "/"" vai para a RAIZ
-        currentPath.clusterNo = superBlock.RootDirCluster;
-        free(currentPath.absolute);
-        currentPath.absolute = malloc(sizeof(char)*2);
-        //memset(currentPath.absolute, '/0', 2);
-        strcpy(currentPath.absolute,"/");
-        return 0;
-    }
-    //faço depois da comparação do path com vazio e "/", pq se nao tava dando segmentation..
-    link(pathname, &linkOutput);
-
-    if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute) == -1){
-        free(absolute);
-        return -1;
-    }
-
-    if(separatePath(absolute, &firstOut, &secondOut) == -1){
-        return -1;
-    }
-
-    clusterOfDir = pathToCluster(firstOut);
-
-    readCluster(clusterOfDir, buffer);
-    if(strlen(secondOut) > 0){
-        for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
-            if ( (strcmp((char *)buffer+i+1, secondOut) == 0) && (((BYTE) buffer[i]) == TYPEVAL_DIRETORIO) && !isDir ) {
-                isDir = 1;
-            } 
-        }
-        if(isDir == 0){
-            return -1;
-        }
-    }
-//se o absoluto do atual com o path for /, então é pq é o ROOT.
-    if(strlen(absolute)== 1 && absolute[0] == '/'){
-        clusterNewPath = superBlock.RootDirCluster;
-    }
-    else{
-        clusterNewPath = pathToCluster(absolute);
-    }
-
-    if(clusterNewPath == -1){//se o pathname n existir
-        free(absolute);
-        return -1;
-    }
-
-    free(currentPath.absolute);
-    currentPath.absolute = malloc(sizeof(char)*(strlen(absolute)+1));
-    strcpy(currentPath.absolute, absolute);
-    currentPath.clusterNo = clusterNewPath;
-
-    free(absolute);
-    
-    return 0;    
-}
-
-
-
-/*-----------------------------------------------------------------------------
-Fun��o:	Informa o diret�rio atual de trabalho.
-		O "pathname" do diret�rio de trabalho deve ser copiado para o buffer indicado por "pathname".
-			Essa c�pia n�o pode exceder o tamanho do buffer, informado pelo par�metro "size".
-		S�o considerados erros:
-			(a) quaisquer situa��es que impe�am a realiza��o da opera��o
-			(b) espa�o insuficiente no buffer "pathname", cujo tamanho est� informado por "size".
-
-Entra:	pathname -> buffer para onde copiar o pathname do diret�rio de trabalho
-		size -> tamanho do buffer pathname
-
-Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (zero).
-		Em caso de erro, ser� retornado um valor diferente de zero.
------------------------------------------------------------------------------*/
-int getcwd2 (char *pathname, int size) {
-	if(strlen(currentPath.absolute) > size){
+	init_disk();
+	if(strcmp(pathname,"") ==0 )
 		return -1;
-	}
-	else{
-		memset(pathname,'\0',size);
-		strcpy(pathname, currentPath.absolute);
-		return 0;
-	}
+	return changeDir(pathname);
 }
 
 
@@ -344,7 +280,9 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o ide
 	Em caso de erro, ser� retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 DIR2 opendir2 (char *pathname) {
-
+	init_disk();
+	if(strcmp(pathname,"") ==0 )
+		return -1;
 	return openDir(pathname);
 }
 
@@ -366,6 +304,10 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero ( e "dentry" n�o ser� v�lido)
 -----------------------------------------------------------------------------*/
 int readdir2 (DIR2 handle, DIRENT2 *dentry) {
+	init_disk();
+
+	if(handle < 0)
+	 	return -1;
 
 	DIRENT2 diretoryentry;
 	diretoryentry=searchDirByHandle(handle);
@@ -387,6 +329,9 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int closedir2 (DIR2 handle) {
+	init_disk();
+	if(handle < 0)
+		return -1;
     return closeDir(handle);
 }
 
@@ -402,6 +347,9 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 	Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int ln2(char *linkname, char *filename) {
+	init_disk();
+	if(strcmp(filename,"") ==0 ||strcmp(linkname,"") ==0)
+		return -1;
     return createSoftlink(linkname,filename);
 }
 

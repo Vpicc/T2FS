@@ -79,7 +79,7 @@ int main() {
     writeInFAT(62,63);
     writeInFAT(63,END_OF_FILE);
 
-    writeFile(handle,aEveryWhere,4000);
+    write2(handle,aEveryWhere,4000);
 
     printDataCluster(61);
     printFAT(0);
