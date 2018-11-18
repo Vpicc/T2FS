@@ -236,4 +236,6 @@ Fazer o teste tentando deletar um diretorio apontado por um link
        printf("ERROR: Nao pode deletar o diretorio raiz\n");
    }
 
+   return 0;
+
 }
