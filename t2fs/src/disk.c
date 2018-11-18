@@ -958,16 +958,18 @@ FILE2 createFile(char * filename){
         free(secondOut);
         return -1; 
     }
-//se n achar um cluster livre na fat
-    if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){
+
+//se ja tiver um arquivo com esse nome nesse diretorio
+//TODO: TEM Q APGAR O TEM E COLOCAR O NOVO.
+    if(isInCluster(clusterToRecordFile, secondOut, TYPEVAL_REGULAR)){
         free(absolute);
         free(firstOut);
         free(secondOut);
         return -1;
     }
-//se ja tiver um arquivo com esse nome nesse diretorio
-//TODO: TEM Q APGAR O TEM E COLOCAR O NOVO.
-    if(isInCluster(clusterToRecordFile, secondOut, TYPEVAL_REGULAR)){
+
+//se n achar um cluster livre na fat
+    if(findFATOpenCluster(&firstClusterFreeInFAT) == -1){
         free(absolute);
         free(firstOut);
         free(secondOut);
@@ -1354,6 +1356,11 @@ int truncateFile(FILE2 handle) {
     writeInFAT(currentCluster,0);
     writeInFAT(truncatedCluster,END_OF_FILE);
 
+    //ATUALIZO O FILE SIZE
+    if(updateFileSize(handle,(DWORD)openFiles[fileNo].currPointer) != 0){
+        return -1;
+    }
+
     return 0;
 }
 
@@ -1459,9 +1466,6 @@ int writeFile(FILE2 handle, char * buffer, int size) {
 
     openFiles[fileNo].currPointer += bytesWritten; 
 
-    if(remainingSize != 0) {
-        return -1;
-    }
     if(setRealDealFileSizeOfChaos(handle) != 0)
         return -2;
 
@@ -1549,7 +1553,6 @@ int realFileSize (FILE2 handle){ //IN PROGRESS
     DWORD value;
     int j;
     int i=0;
-    int clusterCount=0;
     unsigned char *prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster+1);
 
 
@@ -1576,25 +1579,23 @@ int realFileSize (FILE2 handle){ //IN PROGRESS
     while((DWORD)currentCluster != END_OF_FILE && (DWORD)currentCluster != BAD_SECTOR){
 
         //percorre o buffer até achar o final do arquivo ou do cluster, transferindo os dados para saida
-        while(prebuffer[i-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && prebuffer[currentPointerInCluster-clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster]!='\0' && currentPointerInCluster < SECTOR_SIZE*superBlock.SectorsPerCluster){
-            //fprintf(stderr,"\n%d - %d:%c",i,prebuffer[i],buffer[i]);
+        while(currentPointerInCluster <  SECTOR_SIZE*superBlock.SectorsPerCluster && prebuffer[currentPointerInCluster] != '\0') {
             currentPointerInCluster++;
             i++;
         }
+
     //se ainda nao preencheu o tamanho descrito
-        if(i>=clusterCount*SECTOR_SIZE*superBlock.SectorsPerCluster){
-            if(readInFAT(currentCluster,&value) != 0) {
-                return -2;
-            }else{
-                    nextCluster = (int)value;
-                    free(prebuffer);
-                    prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster+1);
-                    prebuffer=readDataCluster(nextCluster);
-                    currentPointerInCluster=0;
-                    currentCluster = nextCluster;
-            }
-            }
-                clusterCount++;
+        if(readInFAT(currentCluster,&value) != 0) {
+            return -2;
+        }
+        nextCluster = (int)value;
+        free(prebuffer);
+        prebuffer=malloc(sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster);
+        if((DWORD)nextCluster != END_OF_FILE){
+            prebuffer=readDataCluster(nextCluster);
+        }
+        currentPointerInCluster=0;
+        currentCluster = nextCluster;
         }
     
     free(prebuffer);
@@ -1632,8 +1633,7 @@ int updateFileSize(FILE2 handle,DWORD newFileSize){
     int i;
     int foundinfolder =0;
     int count;
-    unsigned char buffer[256];
-    unsigned int sectorToWrite;
+    unsigned char * buffer = malloc(sizeof(struct t2fs_record));
 
     //procura o arquivo pelo handle
     for(j=0;j<MAX_NUM_FILES && found==0;j++){
@@ -1654,28 +1654,30 @@ int updateFileSize(FILE2 handle,DWORD newFileSize){
 
         if(folderContent[i].firstCluster == openFiles[fileNo].clusterNo){
             newStruct.bytesFileSize=newFileSize;
-            newStruct.clustersFileSize=(int)newFileSize/(superBlock.SectorsPerCluster*SECTOR_SIZE);
+            newStruct.clustersFileSize= (int)(newFileSize % (superBlock.SectorsPerCluster*SECTOR_SIZE)) == 0 ? (int)newFileSize/(superBlock.SectorsPerCluster*SECTOR_SIZE) : (int)newFileSize/(superBlock.SectorsPerCluster*SECTOR_SIZE) + 1;
             newStruct.firstCluster=openFiles[fileNo].clusterNo;
             strcpy(newStruct.name,folderContent[i].name);
             newStruct.TypeVal=folderContent[i].TypeVal;
             foundinfolder=1;
-            count=(i*sizeof(struct t2fs_record))+(i/4)*sizeof(struct t2fs_record);
+            count=(i*sizeof(struct t2fs_record));
             //fprintf(stderr,"\n\nCOUNT:%d\n\n",count);
             //fprintf(stderr,"DATASECTORSTART: %x",superBlock.DataSectorStart);
-            sectorToWrite=(int)superBlock.DataSectorStart+(openFiles[fileNo].clusterDir*superBlock.SectorsPerCluster);
 
         }
     }
-                read_sector(sectorToWrite,buffer);
-                //fprintf(stderr,"\n\nSECTOR TO WRITE: %d\n\n", sectorToWrite);
-                memcpy(buffer + count,&(newStruct.TypeVal),1);
-                memcpy((buffer +count+ 1),newStruct.name,51);
-                memcpy((buffer +count+ 52),dwordToLtlEnd(newStruct.bytesFileSize),4);
-                memcpy((buffer +count+ 56),dwordToLtlEnd(newStruct.clustersFileSize),4);
-                memcpy((buffer +count+ 60),dwordToLtlEnd(newStruct.firstCluster),4);
-                //fprintf(stderr,"\n\nBUFFER: %s\n\n",buffer);
 
-            write_sector(sectorToWrite, buffer);
+    if (!foundinfolder)
+        return -1;
+
+    memcpy(buffer,&(newStruct.TypeVal),1);
+    memcpy((buffer + 1),newStruct.name,51);
+    memcpy((buffer + 52),dwordToLtlEnd(newStruct.bytesFileSize),4);
+    memcpy((buffer + 56),dwordToLtlEnd(newStruct.clustersFileSize),4);
+    memcpy((buffer + 60),dwordToLtlEnd(newStruct.firstCluster),4);
+
+    //fprintf(stderr,"\n\nBUFFER: %s\n\n",buffer);
+    writeCluster(openFiles[fileNo].clusterDir,buffer,count,sizeof(struct t2fs_record));
+    
 return 0;      
 }
 

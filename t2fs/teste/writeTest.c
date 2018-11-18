@@ -47,11 +47,13 @@ void printFolders(int clusterNo) {
     struct t2fs_record* folderContent = malloc(sizeof(struct t2fs_record)*( (SECTOR_SIZE*superBlock.SectorsPerCluster) / sizeof(struct t2fs_record) ));
     folderContent = readDataClusterFolder(clusterNo);
     for(i = 0; i < folderSize; i++) {
-        printf("\nTYPEVAL: %x\n", folderContent[i].TypeVal);
-        printf("NAME: %s\n", folderContent[i].name);
-        printf("BYTESFILESIZE: %x\n", folderContent[i].bytesFileSize);
-        printf("CLUSTERSFILESIZE: %x\n", folderContent[i].clustersFileSize);
-        printf("FIRSTCLUSTER: %x\n", folderContent[i].firstCluster);
+        if(folderContent[i].firstCluster != 0){
+            printf("\nTYPEVAL: %x\n", folderContent[i].TypeVal);
+            printf("NAME: %s\n", folderContent[i].name);
+            printf("BYTESFILESIZE: %x\n", folderContent[i].bytesFileSize);
+            printf("CLUSTERSFILESIZE: %x\n", folderContent[i].clustersFileSize);
+            printf("FIRSTCLUSTER: %x\n", folderContent[i].firstCluster);
+        }
     }
 }
 
@@ -59,62 +61,27 @@ void printFolders(int clusterNo) {
 int main() {
     int i;
     char aEveryWhere[8096];
-    FILE2 handle = 0;
+    int handleFile5;
 
-    init_disk();
+    if((handleFile5 = create2("/file6.txt")) == -1){
+        printf("\nERRROR create25\n");
+    }
 
-    writeInFAT(60,END_OF_FILE);
-
-    openFiles[0].file = handle;
-    openFiles[0].clusterNo = 60;
-    openFiles[0].currPointer = 0;
-    printf("\n\nEscrevendo no Cluster 23 a letra 'b' 1024 vezes, tamanho de um cluster");  
+    seek2(handleFile5,0);
+    printf("\n\nEscrevendo no Cluster 23 a letra 'b' 1024 vezes, tamanho de um cluster\n");  
 
     for(i = 0; i < 8096; i++){
         aEveryWhere[i] = 'b';
     }
 
-    writeInFAT(60,61);
-    writeInFAT(61,62);
-    writeInFAT(62,63);
-    writeInFAT(63,END_OF_FILE);
 
-    write2(handle,aEveryWhere,4000);
+    printf("\nRETORNO WRITE: %d\n",write2(handleFile5,aEveryWhere,4000));
 
-    printDataCluster(61);
-    printFAT(0);
+    printFolders(2);
+    printf("\nRETORNO SEEK: %d\n",seek2(handleFile5,2600));
+    printf("\nRETORNO TRUNCATE: %d\n",truncate2(handleFile5));
+    printFolders(2);
 
-
-    openFiles[0].currPointer = 3200;
-    truncateFile(handle);
-
-    printDataCluster(61);
-    printDataCluster(62);
-    printDataCluster(63);
-    printFAT(0);
-
-
-   //writeFile(handle,"aEveryWhere",11);
-
-    
-
-
-/*
-    printDataSector(60);
-    printDataSector(11);
-    printDataSector(13);
-    printDataSector(15);
-    printDataSector(16);
-    printDataSector(17);
-    printDataSector(18);
-    printDataSector(19);
-*/
-
-    //writeFile(handle,aEveryWhere,8092);
-
-
-    
-    
 
     
 
