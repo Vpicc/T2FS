@@ -82,7 +82,7 @@ fprintf(stderr,"OPENFILES ARQUIVOS - HANDLE: %d\n",openFile1);
 printOpenFiles();
 fprintf(stderr,"printou\n");
 saida =write2(openFile1,buffer,20);
-    fprintf(stderr,"\n\nSAIDA WRITE: %d\n\n",saida);
+   fprintf(stderr,"\n\nSAIDA WRITE: %d\n\n",saida);
 seek2(openFile1,0);
 saida=read2(openFile1,bufferout,3000);
     fprintf(stderr,"\n\nNUMERO DE CARACTERES LIDOS:%d\tFILE 2: %s\n\n",saida,bufferout);
