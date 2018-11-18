@@ -64,7 +64,7 @@ int main() {
     printf("\n");
     printf("\nDataCluster ANTES DA DELECAO 8:\n");
     printDataCluster(8);
-    if(deleteFile("./file2.txt") == -1){
+    if(delete2("./file2.txt") == -1){
         printf("ERROR NA DELECAO DO FILE2.TXT");
     }
     printFolders(currentPath.clusterNo);
@@ -77,7 +77,7 @@ int main() {
     printf("\n");
     printf("\nDataCluster ANTES DA DELECAO 9:\n");    
     printDataCluster(9);
-    if(deleteFile("./link1") == -1){
+    if(delete2("./link1") == -1){
         printf("ERROR NA DELECAO DO LINK1");
     }
     printFolders(currentPath.clusterNo);

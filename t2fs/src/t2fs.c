@@ -73,7 +73,6 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o han
 	Em caso de erro, deve ser retornado um valor negativo
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
-	
     return openFile(filename);
 }
 
@@ -229,7 +228,77 @@ Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (
 		Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
-    return changeDir(pathname);
+    
+    char * absolute;
+    char * firstOut;
+    char * secondOut;
+    int clusterNewPath;
+    char *linkOutput;
+
+//Variaveis para a validação do tipo:
+    int i;
+    int isDir = 0;
+    int clusterByteSize = sizeof(unsigned char)*SECTOR_SIZE*superBlock.SectorsPerCluster;
+    unsigned char* buffer = malloc(clusterByteSize);
+    int clusterOfDir;
+
+    if(strlen(pathname) == 0){ //Se a string for vazia n altera o lugar
+        return 0;
+    }
+    if(strcmp(pathname,"/") == 0){ // "/"" vai para a RAIZ
+        currentPath.clusterNo = superBlock.RootDirCluster;
+        free(currentPath.absolute);
+        currentPath.absolute = malloc(sizeof(char)*2);
+        //memset(currentPath.absolute, '/0', 2);
+        strcpy(currentPath.absolute,"/");
+        return 0;
+    }
+    //faço depois da comparação do path com vazio e "/", pq se nao tava dando segmentation..
+    link(pathname, &linkOutput);
+
+    if(toAbsolutePath(linkOutput, currentPath.absolute, &absolute) == -1){
+        free(absolute);
+        return -1;
+    }
+
+    if(separatePath(absolute, &firstOut, &secondOut) == -1){
+        return -1;
+    }
+
+    clusterOfDir = pathToCluster(firstOut);
+
+    readCluster(clusterOfDir, buffer);
+    if(strlen(secondOut) > 0){
+        for(i = 0; i < clusterByteSize; i+= sizeof(struct t2fs_record)) {
+            if ( (strcmp((char *)buffer+i+1, secondOut) == 0) && (((BYTE) buffer[i]) == TYPEVAL_DIRETORIO) && !isDir ) {
+                isDir = 1;
+            } 
+        }
+        if(isDir == 0){
+            return -1;
+        }
+    }
+//se o absoluto do atual com o path for /, então é pq é o ROOT.
+    if(strlen(absolute)== 1 && absolute[0] == '/'){
+        clusterNewPath = superBlock.RootDirCluster;
+    }
+    else{
+        clusterNewPath = pathToCluster(absolute);
+    }
+
+    if(clusterNewPath == -1){//se o pathname n existir
+        free(absolute);
+        return -1;
+    }
+
+    free(currentPath.absolute);
+    currentPath.absolute = malloc(sizeof(char)*(strlen(absolute)+1));
+    strcpy(currentPath.absolute, absolute);
+    currentPath.clusterNo = clusterNewPath;
+
+    free(absolute);
+    
+    return 0;    
 }
 
 
@@ -253,7 +322,7 @@ int getcwd2 (char *pathname, int size) {
 		return -1;
 	}
 	else{
-		memset(pathname,'\0',strlen(pathname));
+		memset(pathname,'\0',size);
 		strcpy(pathname, currentPath.absolute);
 		return 0;
 	}

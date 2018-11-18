@@ -59,7 +59,7 @@ int main() {
 
     init_disk();
 
-    printf("\n\n*******TESTE PARA A CREATEFILE");
+    printf("\n\n*******TESTE PARA A create2");
     int handleFile5;
     int handleFile6;
     int handleFile7;
@@ -73,51 +73,51 @@ int main() {
     int handleFile15;
 
     //printf("current: %s", currentPath.absolute);
-    if((handleFile5 = createFile("./dir1/file5.txt")) == -1){
-        printf("\nERRROR createFile5\n");
+    if((handleFile5 = create2("./dir1/file5.txt")) == -1){
+        printf("\nERRROR create25\n");
     }
     //printOpenFiles();
-    if((handleFile6 = createFile("./dir1/file6.txt")) == -1){
-        printf("\nERRROR createFile6\n");
+    if((handleFile6 = create2("./dir1/file6.txt")) == -1){
+        printf("\nERRROR create26\n");
     }
     //printOpenFiles();
-    if((handleFile7 = createFile("./dir1/file7.txt")) == -1){
-        printf("\nERRROR createFile7\n");
+    if((handleFile7 = create2("./dir1/file7.txt")) == -1){
+        printf("\nERRROR create27\n");
     }
     //printOpenFiles();
-    if((handleFile8 = createFile("./dir1/file8.txt")) == -1){
-        printf("\nERRROR createFile8\n");
+    if((handleFile8 = create2("./dir1/file8.txt")) == -1){
+        printf("\nERRROR create28\n");
     }
     printOpenFiles();
-    if((handleFile9 = createFile("./dir1/file9.txt")) == -1){
-        printf("\nERRROR createFile9\n");
+    if((handleFile9 = create2("./dir1/file9.txt")) == -1){
+        printf("\nERRROR create29\n");
     }
-    if((handleFile10 = createFile("./dir1/file10.txt")) == -1){
-        printf("\nERRROR createFile10\n");
+    if((handleFile10 = create2("./dir1/file10.txt")) == -1){
+        printf("\nERRROR create210\n");
     }
-    if((handleFile11 = createFile("./dir1/file11.txt")) == -1){
-        printf("\nERRROR createFile511\n");
+    if((handleFile11 = create2("./dir1/file11.txt")) == -1){
+        printf("\nERRROR create2511\n");
     }
-    if((handleFile12 = createFile("./dir1/file12.txt")) == -1){
-        printf("\nERRROR createFile12\n");
+    if((handleFile12 = create2("./dir1/file12.txt")) == -1){
+        printf("\nERRROR create212\n");
     }
-    if((handleFile13 = createFile("./dir1/file13.txt")) == -1){
-        printf("\nERRROR createFile13\n");
+    if((handleFile13 = create2("./dir1/file13.txt")) == -1){
+        printf("\nERRROR create213\n");
     }
-    if((handleFile14 = createFile("./dir1/file14.txt")) == -1){
-        printf("\nERRROR createFile14\n");
+    if((handleFile14 = create2("./dir1/file14.txt")) == -1){
+        printf("\nERRROR create214\n");
     }
-    if((handleFile15 = createFile("./dir1/file15.txt")) == -1){
-        printf("\nERRROR createFile15\n");
+    if((handleFile15 = create2("./dir1/file15.txt")) == -1){
+        printf("\nERRROR create215\n");
     }
     if(closeFile(handleFile13) == -1){
         printf("\nERROR closeFile 13\n");
     }
-    if((handleFile15 = createFile("./dir1/file15.txt")) == -1){
-        printf("\nERRROR createFile15 second time\n");
+    if((handleFile15 = create2("./dir1/file15.txt")) == -1){
+        printf("\nERRROR create215 second time\n");
     }
     printf("\nMudando para o direotrio './dir1' apois a criação de 11 arquivos(file5 ... file 14)");
-    if(changeDir("./dir1") == -1){
+    if(chdir2("./dir1") == -1){
         printf("\nERRROR 3\n");
     }
 
@@ -127,8 +127,15 @@ int main() {
     printf("\nFOLDERS DO DIREOTIRO DIR1, ONDE FOI CRIADO OS ARQUIVOS e deletado o 15");
     printFolders(currentPath.clusterNo);
 
-    changeDir("/");//Se colocar "/" aqui também está dando segmentation
-    openFile("link1");
+    printf("\nPRINT DOS ARQUIVOS ABERTOS ANTES DE ABRIR O LINK1\n");
+    printOpenFiles();
+
+    if(chdir2("/") == -1){
+        printf("\nERRO\n");
+    }
+    if(open2("link1") == -1){
+        printf("\nERRO 2\n");
+    }
     printf("\nPRINT DA FAT\n");
     printFAT(0);
     printf("\nPRINT DOS ARQUIVOS ABERTOS\n");
