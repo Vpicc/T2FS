@@ -63,7 +63,7 @@ int main() {
     char aEveryWhere[8096];
     int handleFile5;
 
-    if((handleFile5 = create2("/file6.txt")) == -1){
+    if((handleFile5 = create2("file6.txt")) == -1){
         printf("\nERRROR create25\n");
     }
 
@@ -81,9 +81,7 @@ int main() {
     printf("\nRETORNO SEEK: %d\n",seek2(handleFile5,2600));
     printf("\nRETORNO TRUNCATE: %d\n",truncate2(handleFile5));
     printFolders(2);
-
-
-    
+  
 
 
     return 0;

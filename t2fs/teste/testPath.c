@@ -189,5 +189,29 @@ int main() {
     link("/link1",&testeLink);
     printf("\n%s\n",testeLink);
 
+    char * currentPathTest = malloc(15);
+
+    if(getcwd2(currentPathTest, 15) == -1){
+
+    printf("Erro tamanho insuficiente\n");
+
+    }
+
+    else
+
+    printf("\ncurrentPathTest: %s\n", currentPathTest);
+
+    char * currentPathTest2 = malloc(3);
+
+    if(getcwd2(currentPathTest2, 1) == -1){
+
+    printf("Erro tamanho insuficiente\n");
+
+    }
+
+    else
+
+    printf("\ncurrentPathTest: %s\n", currentPathTest2);
+
     return 0;
 }

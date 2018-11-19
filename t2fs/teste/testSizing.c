@@ -77,16 +77,15 @@ for(i=0;i<5;i++){
     }
 }
 fprintf(stderr,"ABRINDO ARQUIVO\n");
-openFile1=openFile("/file2.txt");
+openFile1=open2("/file2.txt");
 fprintf(stderr,"OPENFILES ARQUIVOS - HANDLE: %d\n",openFile1);
 printOpenFiles();
 fprintf(stderr,"printou\n");
 saida =write2(openFile1,buffer,20);
-    fprintf(stderr,"\n\nSAIDA WRITE: %d\n\n",saida);
-fprintf(stderr,"no seek\n");
+   fprintf(stderr,"\n\nSAIDA WRITE: %d\n\n",saida);
 seek2(openFile1,0);
 saida=read2(openFile1,bufferout,3000);
-    fprintf(stderr,"\n\nNUMERO DE CARACTERES LIDOS:%d\tFILE 2:%s\n\n",saida,bufferout);
+    fprintf(stderr,"\n\nNUMERO DE CARACTERES LIDOS:%d\tFILE 2: %s\n\n",saida,bufferout);
 openD=opendir2("/");
 for(i=0;i<5;i++){
     if(readdir2(openD,&direntry)==-1)
@@ -97,6 +96,8 @@ for(i=0;i<5;i++){
         fprintf(stderr,"First entry size: %x\n\n",direntry.fileSize);
     }
 }
+saida =write2(openFile1,buffer,20);
+fprintf(stderr,"\n\nSAIDA WRITE: %d\n\n",saida);
 seek2(openFile1,0);
 saida=read2(openFile1,bufferout,3000);
 fprintf(stderr,"\n\nNUMERO DE CARACTERES LIDOS:%d\tFILE 2:%s\n\n",saida,bufferout);
