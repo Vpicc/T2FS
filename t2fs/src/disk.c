@@ -359,7 +359,7 @@ int tokenizePath(char* path, char*** tokenized) {
 
     i = 0;
     while(pathTok != NULL) {
-        (*tokenized)[i] = malloc(sizeof(char)*strlen(pathTok));
+        (*tokenized)[i] = malloc(sizeof(char)*(strlen(pathTok)+1));
         strcpy((*tokenized)[i], pathTok);
         pathTok = strtok(NULL,"/");
         i += 1;
@@ -1776,7 +1776,7 @@ int createSoftlink(char *linkname,char *filename){ //Fruto do REUSO
 
     link.TypeVal = TYPEVAL_LINK;
     strcpy(link.name, secondOut);
-    link.bytesFileSize = sizeof(char)*strlen(absolutefilename);
+    link.bytesFileSize = sizeof(char)*(strlen(absolutefilename)+1);
     link.clustersFileSize = 1;
     link.firstCluster = firstClusterFreeInFAT;
     writeDataClusterFolder(clusterDotDot, link);

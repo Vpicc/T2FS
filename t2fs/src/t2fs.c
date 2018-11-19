@@ -265,6 +265,32 @@ int chdir2 (char *pathname) {
 }
 
 
+/*-----------------------------------------------------------------------------
+Fun��o:	Informa o diret�rio atual de trabalho.
+		O "pathname" do diret�rio de trabalho deve ser copiado para o buffer indicado por "pathname".
+			Essa c�pia n�o pode exceder o tamanho do buffer, informado pelo par�metro "size".
+		S�o considerados erros:
+			(a) quaisquer situa��es que impe�am a realiza��o da opera��o
+			(b) espa�o insuficiente no buffer "pathname", cujo tamanho est� informado por "size".
+
+Entra:	pathname -> buffer para onde copiar o pathname do diret�rio de trabalho
+		size -> tamanho do buffer pathname
+
+Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (zero).
+		Em caso de erro, ser� retornado um valor diferente de zero.
+-----------------------------------------------------------------------------*/
+int getcwd2 (char *pathname, int size) {
+	if((strlen(currentPath.absolute) + 1) > size){
+		return -1;
+	}
+	else{
+		memset(pathname,'\0',size);
+		strcpy(pathname, currentPath.absolute);
+		return 0;
+	}
+}
+
+
 
 /*-----------------------------------------------------------------------------
 Fun��o:	Abre um diret�rio existente no disco.
